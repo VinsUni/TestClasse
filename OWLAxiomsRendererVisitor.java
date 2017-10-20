@@ -311,45 +311,74 @@ public class OWLAxiomsRendererVisitor extends IndentedRendererVisitor implements
      */
     // The two getRelationName may be put as relation methods (this would be more customisable)
     public String getRelationName( Relation rel, Object ob ) {
-	if ( rel instanceof EquivRelation ) {
-	    if ( ob instanceof ClassExpression ) {
-		return "owl:equivalentClass";
-	    } else if ( ob instanceof PropertyExpression || ob instanceof RelationExpression ) {
-		return "owl:equivalentProperty";
-	    } else if ( ob instanceof InstanceExpression ) {
-		return "owl:sameAs";
-	    }
-	} else if ( rel instanceof IncompatRelation ) {
-	    if ( ob instanceof ClassExpression ) {
-		return "owl:disjointFrom";
-	    } else if ( ob instanceof InstanceExpression ) {
-		return "owl:differentFrom";
-	    }
-	} else if ( rel instanceof SubsumeRelation ) {
-	    //reversed = true;
-	    if ( ob instanceof ClassExpression ) {
-		return "owl:subClassOf";
-	    } else if ( ob instanceof PropertyExpression || ob instanceof RelationExpression ) {
-		return "owl:subPropertyOf";
-	    }
-	} else if ( rel instanceof SubsumedRelation ) {
-	    if ( ob instanceof ClassExpression ) {
-		return "owl:subClassOf";
-	    } else if ( ob instanceof PropertyExpression || ob instanceof RelationExpression ) {
-		return "owl:subPropertyOf";
-	    }
-	} else if ( rel instanceof InstanceOfRelation ) {
-	    if ( ob instanceof InstanceExpression ) {
-		return "rdf:type";
-	    }
-	} else if ( rel instanceof HasInstanceRelation ) {
-	    //reversed = true;
-	    if ( ob instanceof InstanceExpression ) {
-		return "rdf:type";
-	    }
+		return this.classInstanceA(rel, ob);
 	}
-	return null;
-    }
+
+    public String classInstanceA(Relation rel, Object ob){
+		if ( rel instanceof EquivRelation ) {
+			if ( ob instanceof ClassExpression ) {
+				return "owl:equivalentClass";
+			} else if ( ob instanceof PropertyExpression || ob instanceof RelationExpression ) {
+				return "owl:equivalentProperty";
+			} else if ( ob instanceof InstanceExpression ) {
+				return "owl:sameAs";
+			}
+		}else{
+			this.classInstanceB(rel, ob);
+		}
+	}
+
+	public String classInstanceB(Relation rel, Object ob){
+		if ( rel instanceof IncompatRelation ) {
+			if ( ob instanceof ClassExpression ) {
+				return "owl:disjointFrom";
+			} else if ( ob instanceof InstanceExpression ) {
+				return "owl:differentFrom";
+			}
+		}else{
+			this.classInstanceC(rel, ob);
+		}
+	}
+
+	public String classInstanceC(Relation rel, Object ob){
+		if ( rel instanceof SubsumeRelation ) {
+			//reversed = true;
+			if ( ob instanceof ClassExpression ) {
+				return "owl:subClassOf";
+			} else if ( ob instanceof PropertyExpression || ob instanceof RelationExpression ) {
+				return "owl:subPropertyOf";
+			}
+		}else{
+			this.classInstanceD(rel, ob);
+		}
+	}
+
+	public String classInstanceD(Relation rel, Object ob){
+		if ( rel instanceof SubsumedRelation ) {
+			if ( ob instanceof ClassExpression ) {
+				return "owl:subClassOf";
+			}
+		}else{
+			this.classInstanceE(rel, ob);
+		}
+	}
+
+	public String classInstanceE(Relation rel, Object ob){
+		if ( rel instanceof InstanceOfRelation ) {
+			if ( ob instanceof InstanceExpression ) {
+				return "rdf:type";
+			}
+		}else{
+			this.classInstanceF(rel, ob);
+		}
+	}
+
+
+	public String classInstanceF(Relation rel, Object ob){
+		if (rel instanceof HasInstanceRelation) {
+			return null;
+		}
+	}
 
     /**
      * Regular: relation name depends on loaded ontology
