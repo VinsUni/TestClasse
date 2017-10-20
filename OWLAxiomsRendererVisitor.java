@@ -166,45 +166,57 @@ public class OWLAxiomsRendererVisitor extends IndentedRendererVisitor implements
 	writer.print("</rdf:RDF>"+NL);
     }
 
+    public void instanceOb1(){
+		if ( ob1 instanceof ClassExpression || onto1.isClass( ob1 ) ) {
+			writer.print("  <owl:Class rdf:about=\""+u1+"\">"+NL);
+			rel.accept( this );
+			writer.print("  </owl:Class>"+NL);
+		} else if ( ob1 instanceof PropertyExpression || onto1.isDataProperty( ob1 ) ) {
+			writer.print("  <owl:DatatypeProperty rdf:about=\""+u1+"\">"+NL);
+			rel.accept( this );
+			writer.print("  </owl:DatatypeProperty>"+NL);
+		} else if ( ob1 instanceof RelationExpression || onto1.isObjectProperty( ob1 ) ) {
+			writer.print("  <owl:ObjectProperty rdf:about=\""+u1+"\">"+NL);
+			rel.accept( this );
+			writer.print("  </owl:ObjectProperty>"+NL);
+		} else if ( ob1 instanceof InstanceExpression || onto1.isIndividual( ob1 ) ) {
+			writer.print("  <owl:Thing rdf:about=\""+u1+"\">"+NL);
+			rel.accept( this );
+			writer.print("  </owl:Thing>"+NL);
+		}
+	}
+
+    public void controlRel(Relation rel){
+		if ( rel instanceof SubsumeRelation || rel instanceof HasInstanceRelation ){
+			u1 = onto2.getEntityURI( ob2 );
+		} else {
+			u1 = onto1.getEntityURI( ob1 );
+		}
+		this.instanceOb1();
+	}
+
+    public void ifMethod(Cell cell){
+		if ( cell instanceof EDOALCell ) {
+			cell.accept( this ); // useless cast?
+		} else {
+			this.cell = cell;
+			Object ob1 = cell.getObject1();
+			Object ob2 = cell.getObject2();
+			URI u1;
+			try {
+				Relation rel = cell.getRelation();
+				this.controlRel(rel);
+			} catch ( OntowrapException owex ) {
+				throw new AlignmentException( "Error accessing ontology", owex );
+			}
+		}
+	}
+
     public void visit( Cell cell ) throws AlignmentException {
 	if ( subsumedInvocableMethod( this, cell, Cell.class ) ) return;
 	// default behaviour
 	if ( cell.getId() != null ) writer.print(NL+NL+"<!-- "+cell.getId()+" -->"+NL);
-	if ( cell instanceof EDOALCell ) {
-	    cell.accept( this ); // useless cast?
-	} else {
-	    this.cell = cell;
-	    Object ob1 = cell.getObject1();
-	    Object ob2 = cell.getObject2();
-	    URI u1;
-	    try {
-		Relation rel = cell.getRelation();
-		if ( rel instanceof SubsumeRelation || rel instanceof HasInstanceRelation ){
-		    u1 = onto2.getEntityURI( ob2 );
-		} else {
-		    u1 = onto1.getEntityURI( ob1 );
-		}
-		if ( ob1 instanceof ClassExpression || onto1.isClass( ob1 ) ) {
-		    writer.print("  <owl:Class rdf:about=\""+u1+"\">"+NL);
-		    rel.accept( this );
-		    writer.print("  </owl:Class>"+NL);
-		} else if ( ob1 instanceof PropertyExpression || onto1.isDataProperty( ob1 ) ) {
-		    writer.print("  <owl:DatatypeProperty rdf:about=\""+u1+"\">"+NL);
-		    rel.accept( this );
-		    writer.print("  </owl:DatatypeProperty>"+NL);
-		} else if ( ob1 instanceof RelationExpression || onto1.isObjectProperty( ob1 ) ) {
-		    writer.print("  <owl:ObjectProperty rdf:about=\""+u1+"\">"+NL);
-		    rel.accept( this );
-		    writer.print("  </owl:ObjectProperty>"+NL);
-		} else if ( ob1 instanceof InstanceExpression || onto1.isIndividual( ob1 ) ) {
-		    writer.print("  <owl:Thing rdf:about=\""+u1+"\">"+NL);
-		    rel.accept( this );
-		    writer.print("  </owl:Thing>"+NL);
-		}
-	    } catch ( OntowrapException owex ) {
-		throw new AlignmentException( "Error accessing ontology", owex );
-	    }
-	}
+	this.ifMethod(cell);
     }
 
     public void visit( EDOALCell cell ) throws AlignmentException {
