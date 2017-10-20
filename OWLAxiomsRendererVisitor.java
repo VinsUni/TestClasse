@@ -385,45 +385,64 @@ public class OWLAxiomsRendererVisitor extends IndentedRendererVisitor implements
      */
     public String getRelationName( LoadedOntology onto, Relation rel, Object ob ) {
 	try {
-	    if ( rel instanceof EquivRelation ) {
-		if ( onto.isClass( ob ) ) {
-		    return "owl:equivalentClass";
-		} else if ( onto.isProperty( ob ) ) {
-		    return "owl:equivalentProperty";
-		} else if ( onto.isIndividual( ob ) ) {
-		    return "owl:sameAs";
-		}
-	    } else if ( rel instanceof SubsumeRelation ) {
-		if ( onto.isClass( ob ) ) {
-		    return "rdfs:subClassOf";
-		} else if ( onto.isProperty( ob ) ) {
-		    return "rdfs:subPropertyOf";
-		}
-	    } else if ( rel instanceof SubsumedRelation ) {
-		if ( onto.isClass( ob ) ) {
-		    return "rdfs:subClassOf";
-		} else if ( onto.isProperty( ob ) ) {
-		    return "rdfs:subPropertyOf";
-		}
-	    } else if ( rel instanceof IncompatRelation ) {
-		if ( onto.isClass( ob ) ) {
-		    return "rdfs:disjointFrom";
-		} else if ( onto.isIndividual( ob ) ) {
-		    return "owl:differentFrom";
-		}
-	    } else if ( rel instanceof InstanceOfRelation ) {
-		if ( onto.isClass( ob ) ) {
-		    return "rdf:type";
-		}
-	    } else if ( rel instanceof HasInstanceRelation ) {
-		// JE2011: this should be wrong (should be on the other side)
-		if ( onto.isClass( ob ) ) {
-		    return "rdf:type";
-		}
-	    }
+		return this.relationMethodA(onto, rel, ob) ;
 	} catch ( OntowrapException owex ) {}; // return null anyway
 	return null;
     }
+
+    public String relationMethodA(LoadedOntology onto, Relation rel, Object ob){
+		try {
+    	if ( rel instanceof EquivRelation ) {
+			if ( onto.isClass( ob ) ) {
+				return "owl:equivalentClass";
+			} else if ( onto.isProperty( ob ) ) {
+				return "owl:equivalentProperty";
+			} else if ( onto.isIndividual( ob ) ) {
+				return "owl:sameAs";
+			}
+		}else{
+			return this.relationMethodB(onto, rel, ob);
+		}
+		} catch ( OntowrapException owex ) {};
+	}
+
+	public String relationMethodB(LoadedOntology onto, Relation rel, Object ob){
+		try {
+			if ( rel instanceof SubsumeRelation ) {
+				if ( onto.isClass( ob ) ) {
+					return "rdfs:subClassOf";
+				} else if ( onto.isProperty( ob ) ) {
+					return "rdfs:subPropertyOf";
+				}
+			}else{
+				return this.relationMethodC(onto, rel, ob);
+			}
+		} catch ( OntowrapException owex ) {};
+	}
+
+	public String relationMethodC(LoadedOntology onto, Relation rel, Object ob){
+		try {
+			if ( rel instanceof IncompatRelation ) {
+				if ( onto.isClass( ob ) ) {
+					return "rdfs:disjointFrom";
+				} else if ( onto.isIndividual( ob ) ) {
+					return "owl:differentFrom";
+				}
+			}else{
+				return this.relationMethodD(onto, rel, ob);
+			}
+		} catch ( OntowrapException owex ) {};
+	}
+
+	public String relationMethodD(LoadedOntology onto, Relation rel, Object ob){
+		try {
+			if ( rel instanceof InstanceOfRelation || rel instanceof HasInstanceRelation) {
+				if ( onto.isClass( ob ) ) {
+					return "rdf:type";
+				}
+			}
+		} catch ( OntowrapException owex ) {};
+	}
 
     /* This may be genericised
        These methods are not used at the moment
