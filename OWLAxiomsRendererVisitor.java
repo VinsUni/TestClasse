@@ -166,23 +166,41 @@ public class OWLAxiomsRendererVisitor extends IndentedRendererVisitor implements
 	writer.print("</rdf:RDF>"+NL);
     }
 
+    public void CMethod() {
+		if ( ob1 instanceof InstanceExpression || onto1.isIndividual( ob1 ) ) {
+			writer.print("  <owl:Thing rdf:about=\"" + u1 + "\">" + NL);
+			rel.accept(this);
+			writer.print("  </owl:Thing>" + NL);
+		}
+	}
+
+	public void BMethod() {
+		if ( ob1 instanceof RelationExpression || onto1.isObjectProperty( ob1 ) ) {
+			writer.print("  <owl:ObjectProperty rdf:about=\"" + u1 + "\">" + NL);
+			rel.accept(this);
+			writer.print("  </owl:ObjectProperty>" + NL);
+		}else {
+			this.CMethod();
+		}
+	}
+
+    public void AMethod() {
+		if (ob1 instanceof PropertyExpression || onto1.isDataProperty(ob1)) {
+			writer.print("  <owl:DatatypeProperty rdf:about=\"" + u1 + "\">" + NL);
+			rel.accept(this);
+			writer.print("  </owl:DatatypeProperty>" + NL);
+		}else {
+			this.BMethod();
+		}
+	}
+
     public void instanceOb1(){
 		if ( ob1 instanceof ClassExpression || onto1.isClass( ob1 ) ) {
 			writer.print("  <owl:Class rdf:about=\""+u1+"\">"+NL);
 			rel.accept( this );
 			writer.print("  </owl:Class>"+NL);
-		} else if ( ob1 instanceof PropertyExpression || onto1.isDataProperty( ob1 ) ) {
-			writer.print("  <owl:DatatypeProperty rdf:about=\""+u1+"\">"+NL);
-			rel.accept( this );
-			writer.print("  </owl:DatatypeProperty>"+NL);
-		} else if ( ob1 instanceof RelationExpression || onto1.isObjectProperty( ob1 ) ) {
-			writer.print("  <owl:ObjectProperty rdf:about=\""+u1+"\">"+NL);
-			rel.accept( this );
-			writer.print("  </owl:ObjectProperty>"+NL);
-		} else if ( ob1 instanceof InstanceExpression || onto1.isIndividual( ob1 ) ) {
-			writer.print("  <owl:Thing rdf:about=\""+u1+"\">"+NL);
-			rel.accept( this );
-			writer.print("  </owl:Thing>"+NL);
+		} else {
+			this.AMethod();
 		}
 	}
 
