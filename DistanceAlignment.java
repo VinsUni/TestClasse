@@ -403,7 +403,22 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		}
 	}
 
-	private void extractqqInnerBig(int nbind1, int nbind2){
+	private void extractqqInnerBigInner(double threshold, Object[] ind1, Object[] ind2 ){
+		for( i=0; i < result.length ; i++ ){
+			// The matrix has been destroyed
+			double val;
+			if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity(ind1[result[i][0]],ind2[result[i][1]]);
+			else val = 1 - sim.getIndividualSimilarity(ind1[result[i][0]],ind2[result[i][1]]);
+			// JE: here using strict-> is a very good idea.
+			// it means that alignments with 0. similarity
+			// will be excluded from the best match.
+			if( val > threshold ){
+				addCell( new ObjectCell( (String)null, ind1[result[i][0]], ind2[result[i][1]], BasicRelation.createRelation("="), val ) );
+			}
+		}
+	}
+
+	private void extractqqInnerBig(double threshold, int nbind1, int nbind2, Object[] ind1, Object[] ind2){
 		if ( nbind1 != 0 && nbind2 != 0 ) {
 			double[][] matrix = new double[nbind1][nbind2];
 			int i, j;
@@ -416,18 +431,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 			// Pass it to the algorithm
 			int[][] result = callHungarianMethod( matrix, nbind1, nbind2 );
 			// Extract the result
-			for( i=0; i < result.length ; i++ ){
-				// The matrix has been destroyed
-				double val;
-				if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity(ind1[result[i][0]],ind2[result[i][1]]);
-				else val = 1 - sim.getIndividualSimilarity(ind1[result[i][0]],ind2[result[i][1]]);
-				// JE: here using strict-> is a very good idea.
-				// it means that alignments with 0. similarity
-				// will be excluded from the best match.
-				if( val > threshold ){
-					addCell( new ObjectCell( (String)null, ind1[result[i][0]], ind2[result[i][1]], BasicRelation.createRelation("="), val ) );
-				}
-			}
+			this.extractqqInnerBigInner(threshold, ind1, ind2 );
 		}
 	}
 
@@ -457,6 +461,20 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		}
 	}
 
+	private void extractqqLastFor(int i, Object[] prop1){
+		ConcatenatedIterator pit1 = new
+				ConcatenatedIterator(ontology1().getObjectProperties().iterator(),
+				ontology1().getDataProperties().iterator());
+		for ( Object ob: pit1 ) prop1[i++] = ob;
+	}
+
+	private void extractqqLastForB(int j, Object[] prop2){
+		ConcatenatedIterator pit2 = new
+				ConcatenatedIterator(ontology2().getObjectProperties().iterator(),
+				ontology2().getDataProperties().iterator());
+		for ( Object ob: pit2 ) prop2[j++] = ob;
+	}
+
     @SuppressWarnings("unchecked") //ConcatenatedIterator
     public Alignment extractqq( double threshold, Properties params) {
 	try {
@@ -478,15 +496,9 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		Object[] prop1 = new Object[nbprop1];
 		Object[] prop2 = new Object[nbprop2];
 		int i = 0;
-		ConcatenatedIterator pit1 = new 
-		    ConcatenatedIterator(ontology1().getObjectProperties().iterator(),
-					 ontology1().getDataProperties().iterator());
-		for ( Object ob: pit1 ) prop1[i++] = ob;
+		this.extractqqLastFor(i, prop1);
 		int j = 0;
-		ConcatenatedIterator pit2 = new 
-		    ConcatenatedIterator(ontology2().getObjectProperties().iterator(),
-					 ontology2().getDataProperties().iterator());
-		for ( Object ob: pit2 ) prop2[j++] = ob;
+		this.extractqqLastForB(j, prop2);
 		this.extractqqFor(nbprop1, nbprop2, matrix, prop1, prop2);
 		// Pass it to the algorithm
 		int[][] result = callHungarianMethod( matrix, nbprop1, nbprop2 );
