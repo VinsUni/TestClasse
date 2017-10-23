@@ -670,7 +670,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
       } catch (OntowrapException owex) {
 	  owex.printStackTrace();
       }
-      return((Alignment)this);
     }
+		return((Alignment)this);
 	}
 }
