@@ -542,97 +542,126 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
      * overall similarity 1.1, while the optimum is the second solution
      * with overall of 1.8.
      */
+
+    private void extractqqqFirstFor(double val, double threshold, SortedSet<Cell> cellSet){
+		for ( Object ent1: ontology1().getClasses() ) {
+			for ( Object ent2: ontology2().getClasses() ) {
+				if ( sim.getSimilarity() ) val = sim.getClassSimilarity( ent1, ent2 );
+				else val = 1 - sim.getClassSimilarity( ent1, ent2 );
+				if ( val > threshold ){
+					cellSet.add( new ObjectCell( (String)null, ent1, ent2, BasicRelation.createRelation("="), val ) );
+				}
+			}
+		}
+	}
+
+	private void extractqqqSecFor(ConcatenatedIterator pit1, double val, double threshold, SortedSet<Cell> cellSet){
+		for ( Object ent1: pit1 ) {
+			ConcatenatedIterator pit2 = new
+					ConcatenatedIterator(ontology2().getObjectProperties().iterator(),
+					ontology2().getDataProperties().iterator());
+			for ( Object ent2: pit2 ) {
+				if ( sim.getSimilarity() ) val = sim.getPropertySimilarity( ent1, ent2 );
+				else val = 1 - sim.getPropertySimilarity( ent1, ent2 );
+				if ( val > threshold ){
+					cellSet.add( new ObjectCell( (String)null, ent1, ent2, BasicRelation.createRelation("="), val ) );
+				}
+			}
+		}
+	}
+
+	private void extractqqqIfElse(Properties params, double val, double threshold, SortedSet<Cell> cellSet){
+		if (  params.getProperty("noinst") == null ){
+			for( Object ent1: ontology1().getIndividuals() ) {
+				this.extractqqqIfElseInner(val, threshold, cellSet);
+			}
+		}
+	}
+
+	private void extractqqqIfElseInner(double val, double threshold, SortedSet<Cell> cellSet){
+		if ( ontology1().getEntityURI( ent1 ) != null ) {
+			for( Object ent2: ontology2().getIndividuals() ) {
+				this.extractqqqIfElseInnerB(val, threshold, cellSet);
+			}
+		}
+	}
+
+	private void extractqqqIfElseInnerB(double val, double threshold, SortedSet<Cell> cellSet){
+		if ( ontology2().getEntityURI( ent2 ) != null ) {
+			if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity( ent1, ent2 );
+			else val = 1 - sim.getIndividualSimilarity( ent1, ent2 );
+			if ( val > threshold ){
+				cellSet.add( new ObjectCell( (String)null, ent1, ent2, BasicRelation.createRelation("="), val ) );
+			}
+		}
+	}
+
+	private void extractqqqLastFor(SortedSet<Cell> cellSet){
+		for( Cell cell : cellSet ){
+			Object ent1 = cell.getObject1();
+			Object ent2 = cell.getObject2();
+			if ( (getAlignCells1( ent1 ) == null) && (getAlignCells2( ent2 ) == null) ){
+				// The cell is directly added!
+				addCell( cell );
+			}
+		}
+	}
+
+	class Comparatore extends Comparable<Cell> {
+
+		public int compareTo(Cell o1, Cell o2)
+				throws ClassCastException {
+			try {
+				//System.err.println(o1.getObject1()+" -- "+o1.getObject2()+" // "+o2.getObject1()+" -- "+o2.getObject2());
+
+				if (o1.getStrength() > o2.getStrength()) {
+					return -1;
+				} else if (o1.getStrength() < o2.getStrength()) {
+					return 1;
+				} else if (ontology1().getEntityName(o1.getObject1()) == null
+						|| ontology2().getEntityName(o2.getObject1()) == null) {
+					return -1;
+				} else if (ontology1().getEntityName(o1.getObject1()).compareTo(ontology2().getEntityName(o2.getObject1())) > 0) {
+					return -1;
+				} else if (ontology1().getEntityName(o1.getObject1()).compareTo(ontology2().getEntityName(o2.getObject1())) < 0) {
+					return 1;
+				} else if (ontology1().getEntityName(o1.getObject2()) == null
+						|| ontology2().getEntityName(o2.getObject2()) == null) {
+					return -1;
+				} else if (ontology1().getEntityName(o1.getObject2()).compareTo(ontology2().getEntityName(o2.getObject2())) > 0) {
+					return -1;
+					// Assume they have different names
+				} else {
+					return 1;
+				}
+			} catch ( OntowrapException e) {
+			e.printStackTrace(); return 0;}
+		}
+	}
+
     @SuppressWarnings("unchecked") //ConcatenatedIterator
     public Alignment extractqqgreedy( double threshold, Properties params) {
 	double val = 0;
 	//TreeSet could be replaced by something else
 	//The comparator must always tell that things are different!
 	SortedSet<Cell> cellSet = new TreeSet<Cell>(
-			    new Comparator<Cell>() {
-				public int compare( Cell o1, Cell o2 )
-				    throws ClassCastException{
-				    try {
-					//System.err.println(o1.getObject1()+" -- "+o1.getObject2()+" // "+o2.getObject1()+" -- "+o2.getObject2());
-					if ( o1.getStrength() > o2.getStrength() ){
-					    return -1;
-					} else if ( o1.getStrength() < o2.getStrength() ){
-					    return 1;
-					} else if ( ontology1().getEntityName( o1.getObject1() ) == null
-						    || ontology2().getEntityName( o2.getObject1() ) == null ) {
-					    return -1;
-					} else if ( ontology1().getEntityName( o1.getObject1()).compareTo( ontology2().getEntityName( o2.getObject1() ) ) > 0 ) {
-					    return -1;
-					} else if ( ontology1().getEntityName( o1.getObject1()).compareTo( ontology2().getEntityName( o2.getObject1() ) ) < 0 ) {
-					    return 1;
-					} else if ( ontology1().getEntityName( o1.getObject2() ) == null
-						    || ontology2().getEntityName( o2.getObject2() ) == null ) {
-					    return -1;
-					} else if ( ontology1().getEntityName( o1.getObject2()).compareTo( ontology2().getEntityName( o2.getObject2() ) ) > 0 ) {
-					    return -1;
-					// Assume they have different names
-					} else { return 1; }
-				    } catch ( OntowrapException e) { 
-					e.printStackTrace(); return 0;}
-				}
-			    }
-			    );
+			    new Comparatore<Cell>() {
       try {
 	  // Get all the matrix above threshold in the SortedSet
 	  // Plus a map from the objects to the cells
 	  // O(n^2.log n)
 	  // for classes
-	  for ( Object ent1: ontology1().getClasses() ) {
-	      for ( Object ent2: ontology2().getClasses() ) {
-		  if ( sim.getSimilarity() ) val = sim.getClassSimilarity( ent1, ent2 );
-		  else val = 1 - sim.getClassSimilarity( ent1, ent2 );
-		  if ( val > threshold ){
-		      cellSet.add( new ObjectCell( (String)null, ent1, ent2, BasicRelation.createRelation("="), val ) );
-		  }
-	      }
-	  }
+	  this.extractqqqFirstFor(val, threshold, cellSet);
 	  // for properties
 	  ConcatenatedIterator pit1 = new 
 	      ConcatenatedIterator(ontology1().getObjectProperties().iterator(),
 				   ontology1().getDataProperties().iterator());
-	  for ( Object ent1: pit1 ) {
-	      ConcatenatedIterator pit2 = new 
-		  ConcatenatedIterator(ontology2().getObjectProperties().iterator(),
-					ontology2().getDataProperties().iterator());
-	      for ( Object ent2: pit2 ) {
-		  if ( sim.getSimilarity() ) val = sim.getPropertySimilarity( ent1, ent2 );
-		  else val = 1 - sim.getPropertySimilarity( ent1, ent2 );
-		  if ( val > threshold ){
-		      cellSet.add( new ObjectCell( (String)null, ent1, ent2, BasicRelation.createRelation("="), val ) );
-		  }
-	      }
-	  }
+	  this.extractqqqSecFor(pit1, val, threshold, cellSet);
 	  // for individuals
-	  if (  params.getProperty("noinst") == null ){
-	      for( Object ent1: ontology1().getIndividuals() ) {
-		  if ( ontology1().getEntityURI( ent1 ) != null ) {
-
-		      for( Object ent2: ontology2().getIndividuals() ) {
-			  if ( ontology2().getEntityURI( ent2 ) != null ) {
-			      if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity( ent1, ent2 );
-			      else val = 1 - sim.getIndividualSimilarity( ent1, ent2 );
-			      if ( val > threshold ){
-				  cellSet.add( new ObjectCell( (String)null, ent1, ent2, BasicRelation.createRelation("="), val ) );
-			      }
-			  }
-		      }
-		  }
-	      }
-	  }
+	  this.extractqqqIfElse(params, val, threshold, cellSet);
 
 	  // O(n^2)
-	  for( Cell cell : cellSet ){
-	      Object ent1 = cell.getObject1();
-	      Object ent2 = cell.getObject2();
-	      if ( (getAlignCells1( ent1 ) == null) && (getAlignCells2( ent2 ) == null) ){
-		  // The cell is directly added!
-		  addCell( cell );
-	      }
-	  };
+	  this.extractqqqLastFor(cellSet);
 
       } catch (AlignmentException alex) {
 	  alex.printStackTrace();
