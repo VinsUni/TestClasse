@@ -682,6 +682,26 @@ public class OWLAxiomsRendererVisitor extends IndentedRendererVisitor implements
      * and Property (DataProperty) constructor than owl:inverseOf
      * It is thus imposible to transcribe our and, or and not constructors.
      */
+
+    public void ifElseMethod(final PropertyConstruction e, final Constructor op ){
+		if ( (op == Constructor.AND) || (op == Constructor.OR) || (op == Constructor.COMP) ) {
+			for ( final PathExpression pe : e.getComponents() ) {
+				writer.print(linePrefix);
+				pe.accept( this );
+				writer.print(NL);
+			}
+		}else{
+			this.ifElseMethodB(e, op);
+		}
+	}
+
+	public void ifElseMethodB(final PropertyConstruction e ) {
+		for (final PathExpression pe : e.getComponents()) {
+			pe.accept( this );
+			writer.print(NL);
+		}
+	}
+
     public void visit( final PropertyConstruction e ) throws AlignmentException {
 	Relation toProcessNext = toProcess;
 	toProcess = null;
@@ -697,18 +717,7 @@ public class OWLAxiomsRendererVisitor extends IndentedRendererVisitor implements
 	if ( (op == Constructor.AND) || (op == Constructor.OR) || (op == Constructor.COMP) ) writer.print(" "+SyntaxElement.RDF_PARSETYPE.print(DEF)+"=\"Collection\"");
 	writer.print(">"+NL);
 	increaseIndent();
-	if ( (op == Constructor.AND) || (op == Constructor.OR) || (op == Constructor.COMP) ) {
-	    for ( final PathExpression pe : e.getComponents() ) {
-		writer.print(linePrefix);
-		pe.accept( this );
-		writer.print(NL);
-	    }
-	} else {
-	    for (final PathExpression pe : e.getComponents()) {
-		pe.accept( this );
-		writer.print(NL);
-	    }
-	}
+	this.ifElseMethod(e,op);
 	decreaseIndent();
 	indentedOutput("</owl:"+owlop+">"+NL);
 	if ( toProcessNext != null ) { toProcessNext.accept( this ); writer.print(NL); }
