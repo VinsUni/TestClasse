@@ -837,6 +837,38 @@ public class OWLAxiomsRendererVisitor extends IndentedRendererVisitor implements
      * It is also possible to rewrite the reflexive closures as axioms as well.
      * But the transitive closure can only be obtained through subsumption.
      */
+
+    public void visitIfMethod(final Constructor op, String owlop){
+		if ( op == Constructor.INVERSE ) {
+			owlop = "inverseOf";
+		} else if ( op == Constructor.COMP ) {
+			owlop = "propertyChainAxiom";
+		}
+	}
+
+	public void visitIfMethodB(final Constructor op, final RelationConstruction e){
+		if ( (op == Constructor.AND) || (op == Constructor.OR) || (op == Constructor.COMP) ) {
+			this.visitForMethodBA(e);
+		} else { // NOT... or else: enumerate them
+			this.visitForMethodBB(e);
+		}
+	}
+
+	public void visitForMethodBA(final RelationConstruction e){
+		for (final PathExpression re : e.getComponents()) {
+			writer.print(linePrefix);
+			re.accept( this );
+			writer.print(NL);
+		}
+	}
+
+	public void visitForMethodBB(final RelationConstruction e){
+		for (final PathExpression re : e.getComponents()) {
+			re.accept( this );
+			writer.print(NL);
+		}
+	}
+
     public void visit( final RelationConstruction e ) throws AlignmentException {
 	Relation toProcessNext = toProcess;
 	toProcess = null;
@@ -844,11 +876,7 @@ public class OWLAxiomsRendererVisitor extends IndentedRendererVisitor implements
 	increaseIndent();
 	final Constructor op = e.getOperator();
 	String owlop = null;
-	if ( op == Constructor.INVERSE ) {
-	    owlop = "inverseOf";
-	} else if ( op == Constructor.COMP ) {
-	    owlop = "propertyChainAxiom";
-	}
+	this.visitIfMethod(op, owlop);
 	// JE: FOR TESTING
 	//owlop = "FORTESTING("+op.name()+")";
 	if ( owlop == null ) throw new AlignmentException( "Cannot translate relation construction in OWL : "+op );
@@ -856,18 +884,7 @@ public class OWLAxiomsRendererVisitor extends IndentedRendererVisitor implements
 	if ( (op == Constructor.OR) || (op == Constructor.AND) || (op == Constructor.COMP) ) writer.print(" "+SyntaxElement.RDF_PARSETYPE.print(DEF)+"=\"Collection\"");
 	writer.print(">"+NL);
 	increaseIndent();
-	if ( (op == Constructor.AND) || (op == Constructor.OR) || (op == Constructor.COMP) ) {
-	    for (final PathExpression re : e.getComponents()) {
-		writer.print(linePrefix);
-		re.accept( this );
-		writer.print(NL);
-	    }
-	} else { // NOT... or else: enumerate them
-	    for (final PathExpression re : e.getComponents()) {
-		re.accept( this );
-		writer.print(NL);
-	    }
-	}
+	this.visitIfMethodB(op, e);
 	decreaseIndent();
 	indentedOutput("</owl:"+owlop+">"+NL);
 	if ( toProcessNext != null ) { toProcessNext.accept( this ); writer.print(NL); }
