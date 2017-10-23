@@ -24,7 +24,6 @@ import java.lang.*;
 import java.lang.ClassCastException;
 import java.util.TreeSet;
 import java.util.SortedSet;
-import java.util.*;
 import java.util.Properties;
 
 import org.semanticweb.owl.align.Alignment;
@@ -128,35 +127,43 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
      * *? (covering +?, *1 and +1)
      */
 
-    public Aligment extractIfElseMethod(String type, Properties params, double threshold){
-		if ( type.equals("?*") || type.equals("1*") || type.equals("?+") || type.equals("1+") ) return extractqs( threshold, params );
-		else return this.extractIfElseMethodB(type, params, threshold);
+    public Alignment extractIfElseMethod(String type, Properties params, double threshold){
+		if ( type.equals("?*") || type.equals("1*") || type.equals("?+") || type.equals("1+") ) {
+			return extractqs(threshold, params);
+		} else {
+			return extractIfElseMethodB(type, params, threshold);
+		}
 	}
 
-	public Aligment extractIfElseMethodB(String type, Properties params, double threshold){
-		if ( type.equals("??") || type.equals("1?") || type.equals("?1") || type.equals("11") ) return extractqq( threshold, params );
-		else return this.extractIfElseMethodC(type, params, threshold);
+	public Alignment extractIfElseMethodB(String type, Properties params, double threshold){
+		if ( type.equals("??") || type.equals("1?") || type.equals("?1") || type.equals("11") ) {
+			return this.extractqq(threshold, params);
+		} else {
+			return this.extractIfElseMethodC(type, params, threshold);
+		}
 	}
 
-	public Aligment extractIfElseMethodC(String type, Properties params, double threshold){
+	public Alignment extractIfElseMethodC(String type, Properties params, double threshold){
 		if ( type.equals("*?") || type.equals("+?") || type.equals("*1") || type.equals("+1") ) return extractqs( threshold, params );
 		else return this.extractIfElseMethodD(type, params, threshold);
 	}
 
-	public Aligment extractIfElseMethodD(String type, Properties params, double threshold){
+	public Alignment extractIfElseMethodD(String type, Properties params, double threshold){
 		if ( type.equals("**") || type.equals("+*") || type.equals("*+") || type.equals("++") ) return extractss( threshold, params );
-		else throw new AlignmentException("Unknown alignment type: "+type);
+		else try {
+			throw new AlignmentException("Unknown alignment type: "+type);
+		} catch (AlignmentException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
     public Alignment extract(String type, Properties params) throws AlignmentException {
 	double threshold = 0.;
 	if (  params.getProperty("threshold") != null )
 	    threshold = Double.parseDouble( params.getProperty("threshold") );
-
+	return this.extractIfElseMethod(type, params, threshold);
 	//System.err.println("The type is "+type+" with length = "+type.length());
-
-
-
     }
 
     // JE: It is now certainly possible to virtualise extraction as it has
@@ -180,7 +187,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 			} catch (OntowrapException e) {
 				e.printStackTrace();
 			}
-			this.extractqsInnerFor(pit2, val, max, found);
+			this.extractqsInnerFor(pit2, val, max, found, prop1, prop2);
 			if ( found ) try {
 				addAlignCell(prop1,prop2, "=", max);
 			} catch (AlignmentException e) {
@@ -189,7 +196,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		}
 	}
 
-	private void extractqsInnerFor(ConcatenatedIterator pit2, double val, double max, boolean found){
+	private void extractqsInnerFor(ConcatenatedIterator pit2, double val, double max, boolean found, Object prop1, Object prop2){
 		for ( Object current : pit2 ){
 			if ( sim.getSimilarity() ) val = sim.getPropertySimilarity(prop1,current);
 			else val =  1. - sim.getPropertySimilarity(prop1,current);
@@ -225,7 +232,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		if (  params.getProperty("noinst") == null ){
 			try {
 				for ( Object ind1 : ontology1().getIndividuals() ) {
-                    this.extractqsIndividualIfElse(max, val, found, threshold);
+                    this.extractqsIndividualIfElse(max, val, found, threshold, ind1);
                 }
 			} catch (OntowrapException e) {
 				e.printStackTrace();
@@ -233,28 +240,38 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		}
 	}
 
-	private void extractqsIndividualIfElse(double max, double val, boolean found, double threshold){
-		if ( ontology1().getEntityURI( ind1 ) != null ) {
-			found = false; max = threshold; val = 0;
-			Object ind2 = null;
-			try {
-				for ( Object current : ontology2().getIndividuals() ) {
-                    this.extractqsIndividualIfElseB(val, found, max);
+	private void extractqsIndividualIfElse(double max, double val, boolean found, double threshold, Object ind1){
+		try {
+			if ( ontology1().getEntityURI( ind1 ) != null ) {
+                found = false; max = threshold; val = 0;
+                Object ind2 = null;
+                try {
+                    for ( Object current : ontology2().getIndividuals() ) {
+                        this.extractqsIndividualIfElseB(val, found, max, ind1, current, ind2);
+                    }
+                } catch (OntowrapException e) {
+                    e.printStackTrace();
                 }
-			} catch (OntowrapException e) {
-				e.printStackTrace();
-			}
-			if ( found ) addAlignCell(ind1,ind2, "=", max);
+                if ( found ) addAlignCell(ind1,ind2, "=", max);
+            }
+		} catch (OntowrapException e) {
+			e.printStackTrace();
+		} catch (AlignmentException e) {
+			e.printStackTrace();
 		}
 	}
 
-	private void extractqsIndividualIfElseB(double val, boolean found, double max){
-		if ( ontology2().getEntityURI( current ) != null ) {
-			if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity( ind1, current );
-			else val = 1 - sim.getIndividualSimilarity( ind1, current );
-			if (val > max) {
-				found = true; max = val; ind2 = current;
-			}
+	private void extractqsIndividualIfElseB(double val, boolean found, double max, Object ind1, Object ind2, Object current){
+		try {
+			if ( ontology2().getEntityURI( current ) != null ) {
+                if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity( ind1, current );
+                else val = 1 - sim.getIndividualSimilarity( ind1, current );
+                if (val > max) {
+                    found = true; max = val; ind2 = current;
+                }
+            }
+		} catch (OntowrapException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -269,7 +286,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	  ConcatenatedIterator pit1 = new 
 	      ConcatenatedIterator(ontology1().getObjectProperties().iterator(),
 				   ontology1().getDataProperties().iterator());
-	  this.extractqsForMethod(pit1, threshold, found, val, max);
+	  this.extractqsForMethod(pit1, threshold, params, found, val, max);
 
 	    // Extract for classes
 	  this.extractqsExtract(found, max, val, threshold);
@@ -277,8 +294,8 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	  // Extract for individuals
 	  this.extractqsIndividual(params, found, max, threshold, val);
       } catch (OntowrapException owex) { owex.printStackTrace(); //}
-      } catch (AlignmentException alex) { alex.printStackTrace(); }
-      return((Alignment)this);
+      }
+		return((Alignment)this);
     }
 
     /**
@@ -329,12 +346,12 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		}
 	}
 
-	private void extractssIndividual(double val, double threshold, Object[] ind1){
+	private void extractssIndividual(double val, double threshold, Object ind1){
 		try {
 			if ( ontology1().getEntityURI( ind1 ) != null ) {
                 try {
-                    for ( Object ind : ontology2().getIndividuals() ) {
-                        this.extractssInnerIndividual(val, threshold, ind, ind1);
+                    for ( Object ind2 : ontology2().getIndividuals() ) {
+                        this.extractssInnerIndividual(val, threshold, ind2, ind1);
                     }
                 } catch (OntowrapException e) {
                     e.printStackTrace();
@@ -345,7 +362,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		}
 	}
 
-	private void extractssInnerIndividual(double val, double threshold, Object ind2, Object[] ind1){
+	private void extractssInnerIndividual(double val, double threshold, Object ind2, Object ind1){
 		try {
 			if ( ontology2().getEntityURI( ind2 ) != null ) {
                 if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity( ind1, ind2 );
@@ -360,7 +377,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	}
 
     @SuppressWarnings("unchecked") //ConcatenatedIterator
-    public Alignment extractss( double threshold) {
+    public Alignment extractss(double threshold, Properties params) {
 	double val = 0.;
 	try {
 	    // Extract for properties
@@ -371,7 +388,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	    // Extract for classes
 	    this.extractssExtract(val, threshold);
 	    // Extract for individuals
-	   this.extractssIndividual(val, threshold, ind1);
+	   this.extractssIndividual(val, threshold);
 	} catch (OntowrapException owex) { owex.printStackTrace(); //}
 	}
 		return((Alignment)this);
@@ -669,7 +686,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		if (  params.getProperty("noinst") == null ){
 			try {
 				for( Object ent1: ontology1().getIndividuals() ) {
-                    this.extractqqqIfElseInner(val, threshold, cellSet);
+                    this.extractqqqIfElseInner(val, threshold, cellSet, ent1);
                 }
 			} catch (OntowrapException e) {
 				e.printStackTrace();
@@ -677,25 +694,35 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		}
 	}
 
-	private void extractqqqIfElseInner(double val, double threshold, SortedSet<Cell> cellSet){
-		if ( ontology1().getEntityURI( ent1 ) != null ) {
-			try {
-				for( Object ent2: ontology2().getIndividuals() ) {
-                    this.extractqqqIfElseInnerB(val, threshold, cellSet);
+	private void extractqqqIfElseInner(double val, double threshold, SortedSet<Cell> cellSet, Object ent1){
+		try {
+			if ( ontology1().getEntityURI( ent1 ) != null ) {
+                try {
+                    for( Object ent2: ontology2().getIndividuals() ) {
+                        this.extractqqqIfElseInnerB(val, threshold, cellSet, ent2, ent1);
+                    }
+                } catch (OntowrapException e) {
+                    e.printStackTrace();
                 }
-			} catch (OntowrapException e) {
-				e.printStackTrace();
-			}
+            }
+		} catch (OntowrapException e) {
+			e.printStackTrace();
 		}
 	}
 
-	private void extractqqqIfElseInnerB(double val, double threshold, SortedSet<Cell> cellSet){
-		if ( ontology2().getEntityURI( ent2 ) != null ) {
-			if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity( ent1, ent2 );
-			else val = 1 - sim.getIndividualSimilarity( ent1, ent2 );
-			if ( val > threshold ){
-				cellSet.add( new ObjectCell( (String)null, ent1, ent2, BasicRelation.createRelation("="), val ) );
-			}
+	private void extractqqqIfElseInnerB(double val, double threshold, SortedSet<Cell> cellSet, Object ent2, Object ent1){
+		try {
+			if ( ontology2().getEntityURI( ent2 ) != null ) {
+                if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity( ent1, ent2 );
+                else val = 1 - sim.getIndividualSimilarity( ent1, ent2 );
+                if ( val > threshold ){
+                    cellSet.add( new ObjectCell( (String)null, ent1, ent2, BasicRelation.createRelation("="), val ) );
+                }
+            }
+		} catch (OntowrapException e) {
+			e.printStackTrace();
+		} catch (AlignmentException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -754,7 +781,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	//TreeSet could be replaced by something else
 	//The comparator must always tell that things are different!
 	SortedSet<Cell> cellSet = new TreeSet<Cell>(
-			    new Comparatore<Cell>() {
+			    new Comparatore() {
       try {
 	  // Get all the matrix above threshold in the SortedSet
 	  // Plus a map from the objects to the cells
