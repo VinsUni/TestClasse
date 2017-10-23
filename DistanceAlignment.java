@@ -167,7 +167,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
      * Complexity: O(n^2)
      */
 
-    private void extractqsForMethod(ConcatenatedIterator pit1, double threshold, params, boolean found, double val, double max){
+    private void extractqsForMethod(ConcatenatedIterator pit1, double threshold, Properties params, boolean found, double val, double max){
 		for( Object prop1 : pit1 ){
 			found = false; max = threshold; val = 0.;
 			Object prop2 = null;
@@ -196,6 +196,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 			for ( Object current : ontology2().getClasses() ) {
 				if ( sim.getSimilarity() ) val = sim.getClassSimilarity(class1,current);
 				else val = 1. - sim.getClassSimilarity(class1,current);
+
 				if (val > max) {
 					found = true; max = val; class2 = current;
 				}
