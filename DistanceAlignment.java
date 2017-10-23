@@ -262,6 +262,50 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
      * Symmetric: return all elements above threshold
      * Complexity: O(n^2)
      */
+
+    private void extractssForMethod(ConcatenatedIterator pit1, double val, double threshold){
+		for( Object prop1 : pit1 ){
+			ConcatenatedIterator pit2 = new
+					ConcatenatedIterator(ontology2().getObjectProperties().iterator(),
+					ontology2().getDataProperties().iterator());
+			this.extractssInnerFor(pit2, val, threshold);
+		}
+	}
+
+	private void extractssInnerFor(ConcatenatedIterator pit2, double val, double threshold){
+		for ( Object prop2 : pit2 ){
+			if ( sim.getSimilarity() ) val = sim.getPropertySimilarity(prop1,prop2);
+			else val =  1. - sim.getPropertySimilarity(prop1,prop2);
+			if ( val > threshold ) addAlignCell(prop1,prop2, "=", val);
+		}
+	}
+
+	private void extractssExtract(double val, double threshold){
+		for ( Object class1 : ontology1().getClasses() ) {
+			for ( Object class2 : ontology2().getClasses() ) {
+				if ( sim.getSimilarity() ) val = sim.getClassSimilarity(class1,class2);
+				else val = 1. - sim.getClassSimilarity(class1,class2);
+				if (val > threshold ) addAlignCell(class1, class2, "=", val);
+			}
+		}
+	}
+
+	private void extractssIndividual(double val, double threshold){
+		if ( ontology1().getEntityURI( ind1 ) != null ) {
+			for ( Object ind2 : ontology2().getIndividuals() ) {
+				this.extractssInnerIndividual(val, threshold);
+			}
+		}
+	}
+
+	private void extractssInnerIndividual(double val, double threshold){
+		if ( ontology2().getEntityURI( ind2 ) != null ) {
+			if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity( ind1, ind2 );
+			else val = 1 - sim.getIndividualSimilarity( ind1, ind2 );
+			if ( val > threshold ) addAlignCell(ind1,ind2, "=", val);
+		}
+	}
+
     @SuppressWarnings("unchecked") //ConcatenatedIterator
     public Alignment extractss( double threshold, Properties params) {
 	double val = 0.;
@@ -270,38 +314,11 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	    ConcatenatedIterator pit1 = new 
 		ConcatenatedIterator(ontology1().getObjectProperties().iterator(),
 				     ontology1().getDataProperties().iterator());
-	    for( Object prop1 : pit1 ){
-		ConcatenatedIterator pit2 = new 
-		    ConcatenatedIterator(ontology2().getObjectProperties().iterator(),
-					 ontology2().getDataProperties().iterator());
-		for ( Object prop2 : pit2 ){
-		    if ( sim.getSimilarity() ) val = sim.getPropertySimilarity(prop1,prop2);
-		    else val =  1. - sim.getPropertySimilarity(prop1,prop2);
-		    if ( val > threshold ) addAlignCell(prop1,prop2, "=", val);
-		}
-	    }
+	    this.extractssForMethod(pit1, val, threshold);
 	    // Extract for classes
-	    for ( Object class1 : ontology1().getClasses() ) {
-		for ( Object class2 : ontology2().getClasses() ) {
-		    if ( sim.getSimilarity() ) val = sim.getClassSimilarity(class1,class2);
-		    else val = 1. - sim.getClassSimilarity(class1,class2);
-		    if (val > threshold ) addAlignCell(class1, class2, "=", val);
-		}
-	    }
+	    this.extractssExtract(val, threshold);
 	    // Extract for individuals
-	    if (  params.getProperty("noinst") == null ){
-		for ( Object ind1 : ontology1().getIndividuals() ) {
-		    if ( ontology1().getEntityURI( ind1 ) != null ) {
-			for ( Object ind2 : ontology2().getIndividuals() ) {
-			    if ( ontology2().getEntityURI( ind2 ) != null ) {
-				if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity( ind1, ind2 );
-				else val = 1 - sim.getIndividualSimilarity( ind1, ind2 );
-				if ( val > threshold ) addAlignCell(ind1,ind2, "=", val);
-			    }
-			}
-		    }
-		}
-	    }
+	   this.extractssIndividual(val, threshold);
 	} catch (OntowrapException owex) { owex.printStackTrace(); //}
 	} catch (AlignmentException alex) { alex.printStackTrace(); }
 	return((Alignment)this);
