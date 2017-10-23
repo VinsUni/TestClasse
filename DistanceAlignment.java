@@ -209,62 +209,116 @@ public abstract class DistanceAlignment extends fr.inrialpes.exmo.align.impl.Obj
 
       try {
 	  // Extract for properties
-	  ConcatenatedIterator pit1 = new 
+	  ConcatenatedIterator pit1 = new
 	      ConcatenatedIterator(ontology1().getObjectProperties().iterator(),
 				   ontology1().getDataProperties().iterator());
-	  for( Object prop1 : pit1 ){
-	      found = false; max = threshold; val = 0.;
-	      Object prop2 = null;
-	      ConcatenatedIterator pit2 = new 
-		  ConcatenatedIterator(ontology2().getObjectProperties().iterator(),
-				       ontology2().getDataProperties().iterator());
-	      for ( Object current : pit2 ){
-		  if ( sim.getSimilarity() ) val = sim.getPropertySimilarity(prop1,current);
-		  else val =  1. - sim.getPropertySimilarity(prop1,current);
-		  if ( val > max) {
-		      found = true; max = val; prop2 = current;
-		  }
-	      }
-	      if ( found ) addAlignCell(prop1,prop2, "=", max);
-	  }
+
+	  this.extractqsForMethodA(pit1, found, max, threshold, val);
+
 	  // Extract for classes
-	  for ( Object class1 : ontology1().getClasses() ) {
-	      found = false; max = threshold; val = 0;
-	      Object class2 = null;
-	      for ( Object current : ontology2().getClasses() ) {
-		  if ( sim.getSimilarity() ) val = sim.getClassSimilarity(class1,current);
-		  else val = 1. - sim.getClassSimilarity(class1,current);
-		  if (val > max) {
-		      found = true; max = val; class2 = current;
-		  }
-	      }
-	      if ( found ) addAlignCell(class1, class2, "=", max);
-	  }
+	  this.extractqsForMethodB(found, max, threshold, val);
+
 	  // Extract for individuals
-	  if (  params.getProperty("noinst") == null ){
-	      for ( Object ind1 : ontology1().getIndividuals() ) {
-		  if ( ontology1().getEntityURI( ind1 ) != null ) {
-		      found = false; max = threshold; val = 0;
-		      Object ind2 = null;
-		      for ( Object current : ontology2().getIndividuals() ) {
-			  if ( ontology2().getEntityURI( current ) != null ) {
-			      if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity( ind1, current );
-			      else val = 1 - sim.getIndividualSimilarity( ind1, current );
-			      if (val > max) {
-				  found = true; max = val; ind2 = current;
-			      }
-			  }
-		      }
-		      if ( found ) addAlignCell(ind1,ind2, "=", max);
-		  }
-	      }
-	  }
+	  this.extractqsIfElseMethod(params, found, max, val, threshold);
+
       } catch (OntowrapException owex) { owex.printStackTrace(); //}
       } catch (AlignmentException alex) { alex.printStackTrace(); }
       return((Alignment)this);
     }
 
-    /**
+	/**
+	 * New Method extractqsForMethodA()
+	 */
+
+	private void extractqsForMethodA(ConcatenatedIterator pit1, boolean found, double max, double threshold, double val ){
+		for( Object prop1 : pit1 ){
+			found = false; max = threshold; val = 0.;
+			Object prop2 = null;
+			ConcatenatedIterator pit2 = new
+					ConcatenatedIterator(ontology2().getObjectProperties().iterator(),
+					ontology2().getDataProperties().iterator());
+			this.extractqsInnerForMethodA(pit2, double val, double max, Object prop1, Object prop2, boolean found);
+			if ( found ) addAlignCell(prop1,prop2, "=", max);
+		}
+	}
+
+	/**
+	 * New Method extractqsInnerForMethodA()
+	 */
+	private void extractqsInnerForMethodA(ConcatenatedIterator pit2, double val, double max, Object prop1, Object prop2, boolean found){
+		for ( Object current : pit2 ){
+			if ( sim.getSimilarity() ) val = sim.getPropertySimilarity(prop1,current);
+			else val =  1. - sim.getPropertySimilarity(prop1,current);
+			if ( val > max) {
+				found = true; max = val; prop2 = current;
+			}
+		}
+	}
+
+	/**
+	 * New Method extractqsForMethodB()
+	 */
+	private void extractqsForMethodB(boolean found, double max, double threshold, double val){
+		for ( Object class1 : ontology1().getClasses() ) {
+			found = false; max = threshold; val = 0;
+			Object class2 = null;
+			this.extractqsInnerForMethodB(class1, class2, found, max, val);
+			if ( found ) addAlignCell(class1, class2, "=", max);
+		}
+	}
+
+	/**
+	 * New Method extractqsInnerForMethodB()
+	 */
+	private void extractqsInnerForMethodB(Object class1, Object class2, boolean found, double max, double val){
+		for ( Object current : ontology2().getClasses() ) {
+			if ( sim.getSimilarity() ) val = sim.getClassSimilarity(class1,current);
+			else val = 1. - sim.getClassSimilarity(class1,current);
+			if (val > max) {
+				found = true; max = val; class2 = current;
+			}
+		}
+	}
+
+	/**
+	 * New Method extractqsIfElseMethod()
+	 */
+	private void extractqsIfElseMethod(Properties params, boolean found, double max, double val, double threshold){
+		if (  params.getProperty("noinst") == null ){
+			for ( Object ind1 : ontology1().getIndividuals() ) {
+				this.extractqsIfElseInnerMethodA(ind1, found, max, threshold, val );
+			}
+		}
+	}
+
+	/**
+	 * New Method extractqsIfElseInnerMethodA()
+	 */
+	private void extractqsIfElseInnerMethodA(Object ind1, boolean found, double max, double val, double threshold){
+		if ( ontology1().getEntityURI( ind1 ) != null ) {
+			found = false; max = threshold; val = 0;
+			Object ind2 = null;
+			for ( Object current : ontology2().getIndividuals() ) {
+				this.extractqsIfElseInnerMethodB(ind1, current, val, max, found);
+			}
+			if ( found ) addAlignCell(ind1,ind2, "=", max);
+		}
+	}
+
+	/**
+	 * New Method extractqsIfElseInnerMethodB()
+	 */
+	private void extractqsIfElseInnerMethodB(Object ind1, Object current, double val, double max, boolean found ){
+		if ( ontology2().getEntityURI( current ) != null ) {
+			if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity( ind1, current );
+			else val = 1 - sim.getIndividualSimilarity( ind1, current );
+			if (val > max) {
+				found = true; max = val; ind2 = current;
+			}
+		}
+	}
+
+	/**
      * Extract the alignment of a ** type
      * Symmetric: return all elements above threshold
      * Complexity: O(n^2)
