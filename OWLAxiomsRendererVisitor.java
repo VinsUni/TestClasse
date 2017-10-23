@@ -490,51 +490,67 @@ public class OWLAxiomsRendererVisitor extends IndentedRendererVisitor implements
 	}
     }
 
+    public void visitControlMethod(Relation toProcessNext, final ClassConstruction e, String owlop, final ClassConstruction op){
+		if ( toProcessNext != null && e.getComponents().size() == 0 ) {
+			if ( op == Constructor.AND ) owlop = "http://www.w3.org/2002/07/owl#Thing";
+			else if ( op == Constructor.OR ) owlop = "http://www.w3.org/2002/07/owl#Nothing";
+			else if ( op == Constructor.NOT ) throw new AlignmentException( "Complement constructor cannot be empty");
+			indentedOutput("<owl:Class "+SyntaxElement.RDF_ABOUT.print(DEF)+"=\""+owlop+"\">"+NL);
+			increaseIndent();
+			toProcessNext.accept( this );
+			writer.print(NL);
+			decreaseIndent();
+			indentedOutput("</owl:Class>");
+		}else{
+			this.visitControlMethod2(toProcessNext, e, owlop, op);
+		}
+	}
+
+	public void visitControlMethod2(Relation toProcessNext, final ClassConstruction e, String owlop, final ClassConstruction op){
+		if ( op == Constructor.AND ) owlop = "intersectionOf";
+		else if ( op == Constructor.OR ) owlop = "unionOf";
+		else if ( op == Constructor.NOT ) owlop = "complementOf";
+		else throw new AlignmentException( "Unknown class constructor : "+op );
+		if ( e.getComponents().size() == 0 ) {
+			if ( op == Constructor.AND ) indentedOutput("<owl:Thing/>");
+			else if ( op == Constructor.OR ) indentedOutput("<owl:Nothing/>");
+			else throw new AlignmentException( "Complement constructor cannot be empty");
+		} else {
+			this.visitControlMethod3(op, toProcessNext, e, owlop);
+		}
+	}
+
+	public void visitControlMethod3(final ClassConstuction op, Relation toProcessNext, final ClassConstruction e, String owlop){
+		indentedOutput("<owl:Class>"+NL);
+		increaseIndent();
+		indentedOutput("<owl:"+owlop);
+		if ( ( (op == Constructor.AND) || (op == Constructor.OR) ) )
+			writer.print(" "+SyntaxElement.RDF_PARSETYPE.print(DEF)+"=\"Collection\"");
+		writer.print(">"+NL);
+		increaseIndent();
+		this.visitForMethod(e);
+		decreaseIndent();
+		indentedOutput("</owl:"+owlop+">"+NL);
+		if ( toProcessNext != null ) { toProcessNext.accept( this ); writer.print(NL); }
+		decreaseIndent();
+		indentedOutput("</owl:Class>");
+	}
+
+	public void visitForMethod(final ClassConstruction e){
+		for (final ClassExpression ce : e.getComponents()) {
+			writer.print(linePrefix);
+			ce.accept( this );
+			writer.print(NL);
+		}
+	}
+
     public void visit( final ClassConstruction e ) throws AlignmentException {
 	Relation toProcessNext = toProcess;
 	toProcess = null;
 	final Constructor op = e.getOperator();
 	String owlop = null;
 	// Very special treatment
-	if ( toProcessNext != null && e.getComponents().size() == 0 ) {
-	    if ( op == Constructor.AND ) owlop = "http://www.w3.org/2002/07/owl#Thing";
-	    else if ( op == Constructor.OR ) owlop = "http://www.w3.org/2002/07/owl#Nothing";
-	    else if ( op == Constructor.NOT ) throw new AlignmentException( "Complement constructor cannot be empty");
-	    indentedOutput("<owl:Class "+SyntaxElement.RDF_ABOUT.print(DEF)+"=\""+owlop+"\">"+NL);
-	    increaseIndent();
-	    toProcessNext.accept( this ); 
-	    writer.print(NL);
-	    decreaseIndent();
-	    indentedOutput("</owl:Class>");
-	} else {
-	    if ( op == Constructor.AND ) owlop = "intersectionOf";
-	    else if ( op == Constructor.OR ) owlop = "unionOf";
-	    else if ( op == Constructor.NOT ) owlop = "complementOf";
-	    else throw new AlignmentException( "Unknown class constructor : "+op );
-	    if ( e.getComponents().size() == 0 ) {
-		if ( op == Constructor.AND ) indentedOutput("<owl:Thing/>");
-		else if ( op == Constructor.OR ) indentedOutput("<owl:Nothing/>");
-		else throw new AlignmentException( "Complement constructor cannot be empty");
-	    } else {
-		indentedOutput("<owl:Class>"+NL);
-		increaseIndent();
-		indentedOutput("<owl:"+owlop);
-		if ( ( (op == Constructor.AND) || (op == Constructor.OR) ) ) 
-		    writer.print(" "+SyntaxElement.RDF_PARSETYPE.print(DEF)+"=\"Collection\"");
-		writer.print(">"+NL);
-		increaseIndent();
-		for (final ClassExpression ce : e.getComponents()) {
-		    writer.print(linePrefix);
-		    ce.accept( this );
-		    writer.print(NL);
-		}
-		decreaseIndent();
-		indentedOutput("</owl:"+owlop+">"+NL);
-		if ( toProcessNext != null ) { toProcessNext.accept( this ); writer.print(NL); }
-		decreaseIndent();
-		indentedOutput("</owl:Class>");
-	    }
-	}
+	this.visitControlMethod(toProcessNext, e, owlop, op);
     }
 
     public void visit( final ClassValueRestriction c ) throws AlignmentException {
