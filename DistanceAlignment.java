@@ -20,10 +20,11 @@
 
 package fr.inrialpes.exmo.align.impl;
 
+import java.lang.*;
 import java.lang.ClassCastException;
 import java.util.TreeSet;
 import java.util.SortedSet;
-import java.util.*;
+import java.util.Comparable;
 import java.util.Properties;
 
 import org.semanticweb.owl.align.Alignment;
