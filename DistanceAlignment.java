@@ -18,12 +18,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  */
 
-package fr.inrialpes.exmo.align.impl; 
+package fr.inrialpes.exmo.align.impl;
 
 import java.lang.ClassCastException;
 import java.util.TreeSet;
 import java.util.SortedSet;
-import java.util.Comparator;
+import java.util.Comparable;
 import java.util.Properties;
 
 import org.semanticweb.owl.align.Alignment;
