@@ -126,21 +126,28 @@ public abstract class DistanceAlignment extends fr.inrialpes.exmo.align.impl.Obj
      * ?* (covering 1*, 1+ and ?+)
      * *? (covering +?, *1 and +1)
      */
+
     public Alignment extract(String type, Properties params) throws AlignmentException {
 	double threshold = 0.;
 	if (  params.getProperty("threshold") != null )
 	    threshold = Double.parseDouble( params.getProperty("threshold") );
 
 	//System.err.println("The type is "+type+" with length = "+type.length());
-	if ( type.equals("?*") || type.equals("1*") || type.equals("?+") || type.equals("1+") ) return extractqs( threshold, params );
-	else if ( type.equals("??") || type.equals("1?") || type.equals("?1") || type.equals("11") ) return extractqq( threshold, params );
-	else if ( type.equals("*?") || type.equals("+?") || type.equals("*1") || type.equals("+1") ) return extractqs( threshold, params );
-	else if ( type.equals("**") || type.equals("+*") || type.equals("*+") || type.equals("++") ) return extractss( threshold, params );
-	// The else should be an error message
-	else throw new AlignmentException("Unknown alignment type: "+type);
+	return this.extractMethodA(type, params, threshold);
     }
 
-    // JE: It is now certainly possible to virtualise extraction as it has
+	/**
+	 * New Method
+	 */
+	private Alignment extractMethodA(String type, Properties params, double threshold) throws AlignmentException {
+		if ( type.equals("?*") || type.equals("1*") || type.equals("?+") || type.equals("1+") ) return extractqs( threshold, params );
+		else if ( type.equals("??") || type.equals("1?") || type.equals("?1") || type.equals("11") ) return extractqq( threshold, params );
+		else if ( type.equals("*?") || type.equals("+?") || type.equals("*1") || type.equals("+1") ) return extractqs( threshold, params );
+		else if ( type.equals("**") || type.equals("+*") || type.equals("*+") || type.equals("++") ) return extractss( threshold, params );
+			// The else should be an error message
+		else throw new AlignmentException("Unknown alignment type: "+type);
+	}
+	// JE: It is now certainly possible to virtualise extraction as it has
     // been done for printing matrix in MatrixMeasure (todo)
 
     /**
