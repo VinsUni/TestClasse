@@ -635,7 +635,9 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 					return 1;
 				}
 			} catch ( OntowrapException e) {
-			e.printStackTrace(); return 0;}
+			e.printStackTrace();
+			return 0;
+			}
 		}
 	}
 
@@ -667,8 +669,8 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	  alex.printStackTrace();
       } catch (OntowrapException owex) {
 	  owex.printStackTrace();
-      };
+      }
       return((Alignment)this);
     }
-
+	}
 }
