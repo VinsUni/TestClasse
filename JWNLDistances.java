@@ -549,7 +549,7 @@ public class JWNLDistances {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param c
 	 * @param result
 	 * @param pos
@@ -591,145 +591,287 @@ public class JWNLDistances {
 	// [1] how far is it from s2
 	// [2] how far is it from a root (depth)
 	Hashtable<Synset,int[]> depth = new Hashtable<Synset,int[]>();
-
 	// Strange to uppercase...
         s1 = s1.toLowerCase();
         s2 = s2.toLowerCase();
 	if ( s1.equals( s2 ) ) return 1.;
-
 	Set<Synset> sense1 = computeSynsets( s1 );
 	Set<Synset> sense2 = computeSynsets( s2 );
 	if ( sense1 == null || sense2 == null ) return 0.;
-
 	// Traverse the graph from s1 and collect distance
 	Stack<Synset> queue = new Stack<Synset>();
-	for ( Synset s : sense1 ) { // Stack s ith 0
-	    int[] v = new int[3]; v[0]=0; v[1]=-1; v[2]=-1;//{ 0, -1, -1 };
-	    depth.put( s, v );
-	    queue.push( s );
-	}
+	this.wuPalmerSimilarityForMethodA(sense1, depth, queue);
 	// Traversal from s1 (marking the distance from start)
 	// (introducing distance from top)
 	Stack<Synset> passed = new Stack<Synset>();
-	while ( !queue.empty() ) { // Stack non empty
-	    //System.err.println("QUEUE: "+queue);
-	    //System.err.println("PASSED: "+passed);
-	    Synset curnode = queue.pop(); // Unstack
-	    int[] curval = depth.get( curnode );
-	    int curdepth = curval[0]; // Retrieve depth
-	    //System.err.println(">> ["+curdepth+"] "+curnode);
-	    try {
-		PointerTarget[] hyps = curnode.getTargets( PointerType.HYPERNYM );
+	this.wuPalmerSimilarityWhileMethodB(queue, depth, passed );
+	// Traverse the graph from s2 and collect distance
+	double bestvalue = 0.;
+	this.wuPalmerSimilarityForMethodC(sense2, queue,  depth, bestvalue);
+	this.wuPalmerSimilarityWhileMethodD(queue, depth, bestvalue);
+	return bestvalue;
+    }
+
+	/**
+	 *
+	 * @param sense1
+	 * @param depth
+	 * @param queue
+	 */
+    private void wuPalmerSimilarityForMethodA(Set<Synset> sense1, Hashtable<Synset,int[]> depth, Stack<Synset> queue){
+		for ( Synset s : sense1 ) { // Stack s ith 0
+			int[] v = new int[3]; v[0]=0; v[1]=-1; v[2]=-1;//{ 0, -1, -1 };
+			depth.put( s, v );
+			queue.push( s );
+		}
+	}
+
+	/**
+	 *
+	 * @param queue
+	 * @param depth
+	 * @param passed
+	 */
+	private void wuPalmerSimilarityWhileMethodB(Stack<Synset> queue, Hashtable<Synset,int[]> depth, Stack<Synset> passed ){
+		while ( !queue.empty() ) { // Stack non empty
+			//System.err.println("QUEUE: "+queue);
+			//System.err.println("PASSED: "+passed);
+			Synset curnode = queue.pop(); // Unstack
+			int[] curval = depth.get( curnode );
+			int curdepth = curval[0]; // Retrieve depth
+			//System.err.println(">> ["+curdepth+"] "+curnode);
+			try {
+				PointerTarget[] hyps = curnode.getTargets( PointerType.HYPERNYM );
+				this.wuPalmerSimilarityWhileMethodBInnerA(hyps, curval, passed, depth, curnode, curdepth, queue);
+			} catch ( JWNLException ex ) {}
+		}
+	}
+
+	/**
+	 *
+	 * @param hyps
+	 * @param curval
+	 * @param passed
+	 * @param depth
+	 */
+	private void wuPalmerSimilarityWhileMethodBInnerA(PointerTarget[] hyps, int[] curval, Stack<Synset> passed, Hashtable<Synset,int[]> depth, Synset curnode, int curdepth, Stack<Synset> queue){
 		if ( hyps.length == 0 ) { // JE**1: Hitting a root
-		    //System.err.println("  == ROOT");
-		    int level = 0;
-		    curval[2] = level;
-		    // Mark second queue
-		    boolean firstmark = false; 
-		    for ( int i = passed.size()-1; i >= 0; i-- ){
+			//System.err.println("  == ROOT");
+			int level = 0;
+			curval[2] = level;
+			// Mark second queue
+			boolean firstmark = false;
+			this.wuPalmerSimilarityWhileMethodBInnerAInnerA(passed, firstmark, level, depth );
+		}else{
+			this.wuPalmerSimilarityWhileMethodBInnerB(passed, curnode, hyps,depth, curdepth, queue );
+		}
+	}
+
+	/**
+	 *
+	 * @param passed
+	 * @param firstmark
+	 * @param level
+	 * @param depth
+	 */
+	private void wuPalmerSimilarityWhileMethodBInnerAInnerA(Stack<Synset> passed, boolean firstmark, int level, Hashtable<Synset,int[]> depth){
+		for ( int i = passed.size()-1; i >= 0; i-- ){
 			Synset current = passed.get(i);
 			if ( !firstmark ) passed.pop(); // unstack until first mark
 			if ( current != null ) {
-			    level++;
-			    //System.err.println("  <== ("+level+") "+current);
-			    int[] val = depth.get( current ); // record depth
-			    if ( val[2] == -1 || val[2] > level ) val[2] = level;
+				level++;
+				//System.err.println("  <== ("+level+") "+current);
+				int[] val = depth.get( current ); // record depth
+				if ( val[2] == -1 || val[2] > level ) val[2] = level;
 			} else { firstmark = true; } // end of poping after first mark
-		    }
-		} else {
-		    passed.push( curnode ); // stack me
-		    for ( PointerTarget s : hyps ) {
-			if ( s instanceof Synset ){
-			    Synset current = (Synset)s;
-			    int[] val = depth.get( current );
-			    //System.err.println("  -> "+current);
-			    if ( val == null ){ // not encounted yet
-				int[] v = new int[3]; v[0]=curdepth+1; v[1]=-1; v[2]=-1;
-				//int[] v = { curdepth+1, -1, -1 };
-				depth.put( current, v );
-				queue.push( current );
-				passed.push( (Synset)null );
-				//System.err.println("  - pushed(1) "+v[0]);
-			    } else if ( val[0] > curdepth+1 ) { // updating shortpath
-				val[0] = curdepth+1;
-				queue.push( current );
-				passed.push( (Synset)null );
-				//System.err.println("  - pushed(2) "+val[0]);
-			    } else { // We must unstack here
-				//System.err.println("  == MEET");
-				int level = val[0];
-				// Mark second queue
-				for ( int i = passed.size()-1; i >= 0; i-- ){
-				    Synset n = passed.get(i);
-				    if ( n != null ) {
-					level++;
-					//System.err.println("  <== ("+level+") "+n);
-					int[] v = depth.get( n ); // record depth
-					if ( v[2] == -1 || v[2] > level ) v[2] = level;
-				    }
-				}
-			    }
-			}
-		    }
-		    // Either unstack the last mark or s if nothing has been put in queue
-		    passed.pop();
 		}
-	    } catch ( JWNLException ex ) {}
 	}
 
-	// Traverse the graph from s2 and collect distance
-	double bestvalue = 0.;
-	for ( Synset s : sense2 ) { // Stack s ith 0
-	    queue.push( s );
-	    int[] val = depth.get( s );
-	    if ( val == null ) {
-		int[] v = new int[3]; v[0]=-1; v[1]=0; v[2]=-1;
-		depth.put( s, v );
-	    } else {
+	/**
+	 *
+	 * @param passed
+	 * @param curnode
+	 * @param hyps
+	 * @param depth
+	 * @param curdepth
+	 * @param queue
+	 */
+	private void wuPalmerSimilarityWhileMethodBInnerB(Stack<Synset> passed, Synset curnode, PointerTarget[] hyps, Hashtable<Synset,int[]> depth, int curdepth, Stack<Synset> queue){
+		passed.push( curnode ); // stack me
+		for ( PointerTarget s : hyps ) {
+			if ( s instanceof Synset ){
+				Synset current = (Synset)s;
+				int[] val = depth.get( current );
+				//System.err.println("  -> "+current);
+				this.wuPalmerSimilarityWhileMethodBInnerBInnerA(val, curdepth, depth, queue, passed);
+			}
+		}
+		// Either unstack the last mark or s if nothing has been put in queue
+		passed.pop();
+	}
+
+	/**
+	 *
+	 * @param val
+	 * @param curdepth
+	 * @param depth
+	 * @param queue
+	 * @param passed
+	 */
+	private void wuPalmerSimilarityWhileMethodBInnerBInnerA(int[] val, int curdepth, Hashtable<Synset,int[]> depth, Stack<Synset> queue, Stack<Synset> passed){
+		if ( val == null ){ // not encounted yet
+			int[] v = new int[3]; v[0]=curdepth+1; v[1]=-1; v[2]=-1;
+			//int[] v = { curdepth+1, -1, -1 };
+			depth.put( current, v );
+			queue.push( current );
+			passed.push( (Synset)null );
+			//System.err.println("  - pushed(1) "+v[0]);
+		}else{
+			this.wuPalmerSimilarityWhileMethodBInnerBInnerB(val, curdepth, queue, passed, depth);
+		}
+	}
+
+	/**
+	 *
+	 * @param val
+	 * @param curdepth
+	 * @param queue
+	 * @param passed
+	 * @param depth
+	 */
+	private void wuPalmerSimilarityWhileMethodBInnerBInnerB(int[] val, int curdepth, Stack<Synset> queue, Stack<Synset> passed, Hashtable<Synset,int[]> depth){
+		if ( val[0] > curdepth+1 ) { // updating shortpath
+			val[0] = curdepth+1;
+			queue.push( current );
+			passed.push( (Synset)null );
+			//System.err.println("  - pushed(2) "+val[0]);
+		}else{
+			this.wuPalmerSimilarityWhileMethodBInnerBInnerC(val, depth,  passed);
+		}
+	}
+
+	/**
+	 *
+	 * @param val
+	 * @param depth
+	 * @param passed
+	 */
+	private void wuPalmerSimilarityWhileMethodBInnerBInnerC(int[] val, Hashtable<Synset,int[]> depth, Stack<Synset> passed){
+		// We must unstack here
+		//System.err.println("  == MEET");
+		int level = val[0];
+		// Mark second queue
+		for ( int i = passed.size()-1; i >= 0; i-- ){
+			Synset n = passed.get(i);
+			if ( n != null ) {
+				level++;
+				//System.err.println("  <== ("+level+") "+n);
+				int[] v = depth.get( n ); // record depth
+				if ( v[2] == -1 || v[2] > level ) v[2] = level;
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param sense2
+	 * @param queue
+	 * @param depth
+	 * @param bestvalue
+	 */
+	private void wuPalmerSimilarityForMethodC(Set<Synset> sense2, Stack<Synset> queue, Hashtable<Synset,int[]> depth, double bestvalue){
+		for ( Synset s : sense2 ) { // Stack s ith 0
+			queue.push( s );
+			int[] val = depth.get( s );
+			if ( val == null ) {
+				int[] v = new int[3]; v[0]=-1; v[1]=0; v[2]=-1;
+				depth.put( s, v );
+			} else {
+				this.wuPalmerSimilarityForMethodCInner(val, bestvalue );
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param val
+	 * @param bestvalue
+	 */
+	private void wuPalmerSimilarityForMethodCInner(int[] val, double bestvalue ){
 		val[1] = 0;
 		//System.err.println(val[0]+"/"+val[1]+"/"+val[2]);
 		//System.err.println( s );
 		double newvalue = (double)(2*val[2])/(double)(val[0]+2*val[2]);
 		if ( newvalue > bestvalue ) {
-		    bestvalue = newvalue;
+			bestvalue = newvalue;
 		}
-	    }
 	}
-	while ( !queue.empty() ) { // Stack non empty
-	    Synset s = queue.pop(); // Unstack
-	    int i = (depth.get( s ))[1]; // Retrieve depth
-	    try {
-		for ( PointerTarget h : s.getTargets( PointerType.HYPERNYM ) ) {
-		    if ( h instanceof Synset ){
+
+	/**
+	 *
+	 * @param queue
+	 * @param depth
+	 * @param bestvalue
+	 */
+	private void wuPalmerSimilarityWhileMethodD(Stack<Synset> queue, Hashtable<Synset,int[]> depth, double bestvalue){
+		while ( !queue.empty() ) { // Stack non empty
+			Synset s = queue.pop(); // Unstack
+			int i = (depth.get( s ))[1]; // Retrieve depth
+			try {
+				for ( PointerTarget h : s.getTargets( PointerType.HYPERNYM ) ) {
+					this.wuPalmerSimilarityWhileMethodDInnerA(i, h, depth, queue, bestvalue);
+				}
+			} catch ( JWNLException ex ) {}
+		}
+	}
+
+	/**
+	 *
+	 * @param i
+	 * @param h
+	 * @param depth
+	 * @param queue
+	 * @param bestvalue
+	 */
+	private void wuPalmerSimilarityWhileMethodDInnerA(int i ,PointerTarget h, Hashtable<Synset,int[]> depth, Stack<Synset> queue, double bestvalue){
+		if ( h instanceof Synset ){
 			Synset current = (Synset)h;
 			int [] level = depth.get( current );
 			if ( level == null ){ // not encounted yet
-			    //if ( bestvalue == -1 || i < bestvalue ) { // modest branch and bound
-			        int[] v = new int[3]; v[0]=-1; v[1]=i+1; v[2]=-1;
+				//if ( bestvalue == -1 || i < bestvalue ) { // modest branch and bound
+				int[] v = new int[3]; v[0]=-1; v[1]=i+1; v[2]=-1;
 				//int[] v = { -1, i+1, -1 };
 				depth.put( current, v );
 				queue.push( current );
 				//}
-			} else if ( level[0] != -1 ){ // This is a least common subsumer
-			    level[1] = i+1;
-			    //System.err.println(level[0]+"/"+level[1]+"/"+level[2]);
-			    //System.err.println( current );
-			    double newvalue = (double)(2*level[2])/(double)(level[0]+i+1+2*level[2]);
-			    if ( newvalue > bestvalue ){
-				bestvalue = newvalue;
-			    }
-			} else if ( level[1] > i+1 ){
-			    level[1] = i+1;
-			    queue.push( current );
+			} else {
+				this.wuPalmerSimilarityWhileMethodDInnerAInnerA(level, i, current, queue, bestvalue);
 			}
-		    }
 		}
-	    } catch ( JWNLException ex ) {}
 	}
 
-	return bestvalue;
-    }
-
+	/**
+	 *
+	 * @param level
+	 * @param i
+	 * @param current
+	 * @param queue
+	 * @param bestvalue
+	 */
+	private void wuPalmerSimilarityWhileMethodDInnerAInnerA(int[] level, int i, Synset current, Stack<Synset> queue, double bestvalue){
+		if ( level[0] != -1 ){ // This is a least common subsumer
+			level[1] = i+1;
+			//System.err.println(level[0]+"/"+level[1]+"/"+level[2]);
+			//System.err.println( current );
+			double newvalue = (double)(2*level[2])/(double)(level[0]+i+1+2*level[2]);
+			if ( newvalue > bestvalue ){
+				bestvalue = newvalue;
+			}
+		} else if ( level[1] > i+1 ){
+			level[1] = i+1;
+			queue.push( current );
+		}
+	}
 
     /**
      * This is an elaborate similarity based on WordNet
