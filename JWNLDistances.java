@@ -1104,7 +1104,7 @@ public class JWNLDistances {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param index1
 	 * @param index2
 	 * @return
@@ -1195,8 +1195,13 @@ public class JWNLDistances {
         return cc;
 
     }
-    
-    private double bestMatch(double matrix[][]) {
+
+	/**
+	 *
+	 * @param matrix
+	 * @return
+	 */
+	private double bestMatch(double matrix[][]) {
         int nbrLines = matrix.length;
         if (nbrLines == 0) return 0;
         int nbrColumns = matrix[0].length;
@@ -1207,32 +1212,49 @@ public class JWNLDistances {
             double max_val = 0;
             int max_i = 0;
             int max_j = 0;
-            for (int i = 0; i < nbrLines; i++) {
-                for (int j = 0; j < nbrColumns; j++) {
-                    if (max_val < matrix[i][j]) {
-                        max_val = matrix[i][j];
+            this.bestMatchForMethodA(nbrLines, nbrColumns, max_val, matrix, max_i, max_j);
+            this.bestMatchForMethodB(nbrLines, nbrColumns, matrix, max_i, max_j);
+            sim += max_val;
+        }
+        return sim / (double)(nbrLines + nbrColumns - minSize);
+    }
+
+	/**
+	 *
+	 * @param nbrLines
+	 * @param nbrColumns
+	 * @param max_val
+	 * @param matrix
+	 * @param max_i
+	 * @param max_j
+	 */
+    private void bestMatchForMethodA(int nbrLines, int nbrColumns, double max_val, double matrix[][], int max_i, int max_j){
+		for (int i = 0; i < nbrLines; i++) {
+			for (int j = 0; j < nbrColumns; j++) {
+				if (max_val < matrix[i][j]) {
+					max_val = matrix[i][j];
                         /* mods
                         if (matrix[i][j] > 0.3)
                             max_val = matrix[i][j];
                         else
                             max_val = matrix[i][j] * mask[i][j];
                         end mods */
-                        max_val = matrix[i][j];
-                        max_i = i;
-                        max_j = j;
-                    }
-                }
-            }
-            for (int i = 0; i < nbrLines; i++) {
-                matrix[i][max_j] = 0;
-            }
-            for (int j = 0; j < nbrColumns; j++) {
-                matrix[max_i][j] = 0;
-            }
-            sim += max_val;
-        }
-        return sim / (double)(nbrLines + nbrColumns - minSize);
-    }
+					max_val = matrix[i][j];
+					max_i = i;
+					max_j = j;
+				}
+			}
+		}
+	}
+
+	private void bestMatchForMethodB(int nbrLines, int nbrColumns, double[][] matrix, int max_i, int max_j){
+		for (int i = 0; i < nbrLines; i++) {
+			matrix[i][max_j] = 0;
+		}
+		for (int j = 0; j < nbrColumns; j++) {
+			matrix[max_i][j] = 0;
+		}
+	}
 
     /**
      * @param token A token.
