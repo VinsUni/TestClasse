@@ -132,13 +132,41 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	    threshold = Double.parseDouble( params.getProperty("threshold") );
 
 	//System.err.println("The type is "+type+" with length = "+type.length());
-	if ( type.equals("?*") || type.equals("1*") || type.equals("?+") || type.equals("1+") ) return extractqs( threshold, params );
-	else if ( type.equals("??") || type.equals("1?") || type.equals("?1") || type.equals("11") ) return extractqq( threshold, params );
-	else if ( type.equals("*?") || type.equals("+?") || type.equals("*1") || type.equals("+1") ) return extractqs( threshold, params );
-	else if ( type.equals("**") || type.equals("+*") || type.equals("*+") || type.equals("++") ) return extractss( threshold, params );
-	// The else should be an error message
-	else throw new AlignmentException("Unknown alignment type: "+type);
+	return this.extractIfElseMethodA(type, params, threshold);
+
     }
+
+    private Alignment extractIfElseMethodA(String type, Properties params, double threshold) throws AlignmentException {
+		if ( type.equals("?*") || type.equals("1*") || type.equals("?+") || type.equals("1+") ) {
+			return extractqs(threshold, params);
+		}else{
+			return this.extractIfElseMethodB(type, params, threshold);
+		}
+	}
+
+	private Alignment extractIfElseMethodB(String type, Properties params, double threshold) throws AlignmentException {
+		if ( type.equals("??") || type.equals("1?") || type.equals("?1") || type.equals("11") ) {
+			return extractqq(threshold, params);
+		}else{
+			return this.extractIfElseMethodC(type, params, threshold);
+		}
+	}
+
+	private Alignment extractIfElseMethodC(String type, Properties params, double threshold) throws AlignmentException {
+		if (type.equals("*?") || type.equals("+?") || type.equals("*1") || type.equals("+1")) {
+			return extractqs(threshold, params);
+		}else{
+			return this.extractIfElseMethodD(type, params, threshold);
+		}
+	}
+
+	private Alignment extractIfElseMethodD(String type, Properties params, double threshold) throws AlignmentException {
+		if (type.equals("**") || type.equals("+*") || type.equals("*+") || type.equals("++")) {
+			return extractss(threshold, params);
+		} else{
+			throw new AlignmentException("Unknown alignment type: " + type);
+		}
+	}
 
     // JE: It is now certainly possible to virtualise extraction as it has
     // been done for printing matrix in MatrixMeasure (todo)
