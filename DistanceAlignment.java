@@ -433,7 +433,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	}
 
 	/**
-	 * 
+	 *
 	 * @param ind1
 	 * @param val
 	 * @param threshold
@@ -468,44 +468,8 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	    // Create a matrix
 	    int nbclasses1 = ontology1().nbClasses();
 	    int nbclasses2 = ontology2().nbClasses();
-	    if ( nbclasses1 != 0 && nbclasses2 != 0 ) {
-		double[][] matrix = new double[nbclasses1][nbclasses2];
-		Object[] class1 = new Object[nbclasses1];
-		Object[] class2 = new Object[nbclasses2];
-		int i = 0;
-		for ( Object ob : ontology1().getClasses() ) {
-		    class1[i++] = ob;
-		}
-		int j = 0;
-		for ( Object ob : ontology2().getClasses() ) {
-		    class2[j++] = ob;
-		}
-		for( i = 0; i < nbclasses1; i++ ){
-		    for( j = 0; j < nbclasses2; j++ ){
-			if ( sim.getSimilarity() ) matrix[i][j] = sim.getClassSimilarity(class1[i],class2[j]);
-			else matrix[i][j] = 1. - sim.getClassSimilarity(class1[i],class2[j]);
-		    }
-		}
-		// Pass it to the algorithm
-		int[][] result = callHungarianMethod( matrix, nbclasses1, nbclasses2 );
-		// Extract the result
-		for( i=0; i < result.length ; i++ ){
-		    // The matrix has been destroyed
-		    double val;
-		    if ( sim.getSimilarity() ) val = sim.getClassSimilarity(class1[result[i][0]],class2[result[i][1]]);
-		    else val = 1 - sim.getClassSimilarity(class1[result[i][0]],class2[result[i][1]]);
-		    // JE: here using strict-> is a very good idea.
-		    // it means that correspondences with 0. similarity
-		    // will be excluded from the best match.
-		    if( val > threshold ){
-			addCell( new ObjectCell( (String)null, class1[result[i][0]], class2[result[i][1]], BasicRelation.createRelation("="), val ) );
-		    }
-		}
-	    }
-	} catch ( AlignmentException alex) { alex.printStackTrace(); }
-	catch ( OntowrapException owex) { owex.printStackTrace(); }
+	    this.extractqqIfElseMethodA(nbclasses1, nbclasses2, threshold);
 	// For properties
-	try{
 	    int nbprop1 = ontology1().nbProperties();
 	    int nbprop2 = ontology2().nbProperties();
 	    if ( nbprop1 != 0 && nbprop2 != 0 ) {
@@ -522,78 +486,16 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		    ConcatenatedIterator(ontology2().getObjectProperties().iterator(),
 					 ontology2().getDataProperties().iterator());
 		for ( Object ob: pit2 ) prop2[j++] = ob;
-		for( i = 0; i < nbprop1; i++ ){
-		    for( j = 0; j < nbprop2; j++ ){
-			if ( sim.getSimilarity() ) matrix[i][j] = sim.getPropertySimilarity(prop1[i],prop2[j]);
-			else matrix[i][j] = 1. - sim.getPropertySimilarity(prop1[i],prop2[j]);
-		    }
-		}
+		this.extractqqForMethodB(i, j, nbprop1, nbprop2, matrix, prop1, prop2);
 		// Pass it to the algorithm
 		int[][] result = callHungarianMethod( matrix, nbprop1, nbprop2 );
 		// Extract the result
-		for( i=0; i < result.length ; i++ ){
-		    // The matrix has been destroyed
-		    double val;
-		    if ( sim.getSimilarity() ) val = sim.getPropertySimilarity(prop1[result[i][0]],prop2[result[i][1]]);
-		    else val = 1 - sim.getPropertySimilarity(prop1[result[i][0]],prop2[result[i][1]]);
-		    // JE: here using strict-> is a very good idea.
-		    // it means that alignments with 0. similarity
-		    // will be excluded from the best match.
-		    if( val > threshold ){
-			addCell( new ObjectCell( (String)null, prop1[result[i][0]], prop2[result[i][1]], BasicRelation.createRelation("="), val ) );
-		    }
-		}
+			this.extractqqForMethodC(result, i,  prop1, prop2, threshold);
 	    }
 	} catch (AlignmentException alex) { alex.printStackTrace(); }
 	catch (OntowrapException owex) { owex.printStackTrace(); }
 	// For individuals
-	if (  params.getProperty("noinst") == null ){
-	    try {
-		// Create individual lists
-		Object[] ind1 = new Object[ontology1().nbIndividuals()];
-		Object[] ind2 = new Object[ontology2().nbIndividuals()];
-		int nbind1 = 0;
-		int nbind2 = 0;
-		for( Object ob : ontology2().getIndividuals() ){
-		    // We suppress anonymous individuals... this is not legitimate
-		    if ( ontology2().getEntityURI( ob ) != null ) {
-			ind2[nbind2++] = ob;
-		    }
-		}
-		for( Object ob : ontology1().getIndividuals() ){
-		    // We suppress anonymous individuals... this is not legitimate
-		    if ( ontology1().getEntityURI( ob ) != null ) {
-			ind1[nbind1++] = ob;
-		    }
-		}
-		if ( nbind1 != 0 && nbind2 != 0 ) {
-		    double[][] matrix = new double[nbind1][nbind2];
-		    int i, j;
-		    for( i=0; i < nbind1; i++ ){
-			for( j=0; j < nbind2; j++ ){
-			    if ( sim.getSimilarity() ) matrix[i][j] = sim.getIndividualSimilarity(ind1[i],ind2[j]);
-			    else matrix[i][j] = 1 - sim.getIndividualSimilarity(ind1[i],ind2[j]);
-			}
-		    }
-		    // Pass it to the algorithm
-		    int[][] result = callHungarianMethod( matrix, nbind1, nbind2 );
-		    // Extract the result
-		    for( i=0; i < result.length ; i++ ){
-			// The matrix has been destroyed
-			double val;
-			if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity(ind1[result[i][0]],ind2[result[i][1]]);
-			else val = 1 - sim.getIndividualSimilarity(ind1[result[i][0]],ind2[result[i][1]]);
-			// JE: here using strict-> is a very good idea.
-			// it means that alignments with 0. similarity
-			// will be excluded from the best match.
-			if( val > threshold ){
-			    addCell( new ObjectCell( (String)null, ind1[result[i][0]], ind2[result[i][1]], BasicRelation.createRelation("="), val ) );
-			}
-		    }
-		}
-	    } catch (AlignmentException alex) { alex.printStackTrace(); //}
-	    } catch (OntowrapException owex) { owex.printStackTrace(); }
-	}
+		this.extractqqIfElseMethodD(params, threshold );
 	return((Alignment)this);
     }
 
@@ -608,10 +510,223 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	    for( int k=0; k < result.length ; k++ ) {
 		int val = result[k][0]; result[k][0] = result[k][1]; result[k][1] = val;
 	    }
-
 	}
 	return result;
     }
+
+	/**
+	 *
+	 * @param nbclasses1
+	 * @param nbclasses2
+	 * @param threshold
+	 * @throws OntowrapException
+	 * @throws AlignmentException
+	 */
+    private void extractqqIfElseMethodA(int nbclasses1, int nbclasses2, double threshold) throws OntowrapException, AlignmentException {
+		if ( nbclasses1 != 0 && nbclasses2 != 0 ) {
+			double[][] matrix = new double[nbclasses1][nbclasses2];
+			Object[] class1 = new Object[nbclasses1];
+			Object[] class2 = new Object[nbclasses2];
+			int i = 0;
+			int j = 0;
+			this.extractqqIfElseMethodAInnerForA(class1, class2, i, j, nbclasses1, nbclasses2, matrix);
+
+			// Pass it to the algorithm
+			int[][] result = callHungarianMethod( matrix, nbclasses1, nbclasses2 );
+			// Extract the result
+			this.extractqqIfElseMethodAInnerForB(class1, class2, i, result, threshold);
+		}
+	}
+
+	/**
+	 *
+	 * @param class1
+	 * @param class2
+	 * @param i
+	 * @param j
+	 * @param nbclasses1
+	 * @param nbclasses2
+	 * @param matrix
+	 * @throws OntowrapException
+	 */
+	private void extractqqIfElseMethodAInnerForA(Object[] class1, Object[] class2, int i, int j, int nbclasses1, int nbclasses2, double[][] matrix) throws OntowrapException {
+		for ( Object ob : ontology1().getClasses() ) {
+			class1[i++] = ob;
+		}
+		for ( Object ob : ontology2().getClasses() ) {
+			class2[j++] = ob;
+		}
+		for( i = 0; i < nbclasses1; i++ ){
+			for( j = 0; j < nbclasses2; j++ ){
+				if ( sim.getSimilarity() ) matrix[i][j] = sim.getClassSimilarity(class1[i],class2[j]);
+				else matrix[i][j] = 1. - sim.getClassSimilarity(class1[i],class2[j]);
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param class1
+	 * @param class2
+	 * @param i
+	 * @param result
+	 * @param threshold
+	 * @throws AlignmentException
+	 */
+	private void extractqqIfElseMethodAInnerForB(Object[] class1, Object[] class2, int i, int[][] result, double threshold) throws AlignmentException {
+		for( i=0; i < result.length ; i++ ){
+			// The matrix has been destroyed
+			double val;
+			if ( sim.getSimilarity() ) val = sim.getClassSimilarity(class1[result[i][0]],class2[result[i][1]]);
+			else val = 1 - sim.getClassSimilarity(class1[result[i][0]],class2[result[i][1]]);
+			// JE: here using strict-> is a very good idea.
+			// it means that correspondences with 0. similarity
+			// will be excluded from the best match.
+			if( val > threshold ){
+				addCell( new ObjectCell( (String)null, class1[result[i][0]], class2[result[i][1]], BasicRelation.createRelation("="), val ) );
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param i
+	 * @param j
+	 * @param nbprop1
+	 * @param nbprop2
+	 * @param matrix
+	 * @param prop1
+	 * @param prop2
+	 */
+	private void extractqqForMethodB(int i, int j, int nbprop1, int nbprop2, double[][] matrix, Object[] prop1, Object[] prop2){
+		for( i = 0; i < nbprop1; i++ ){
+			for( j = 0; j < nbprop2; j++ ){
+				if ( sim.getSimilarity() ) matrix[i][j] = sim.getPropertySimilarity(prop1[i],prop2[j]);
+				else matrix[i][j] = 1. - sim.getPropertySimilarity(prop1[i],prop2[j]);
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param result
+	 * @param i
+	 * @param prop1
+	 * @param prop2
+	 * @param threshold
+	 * @throws AlignmentException
+	 */
+	private void extractqqForMethodC(int[][] result, int i, Object[] prop1, Object[] prop2, double threshold) throws AlignmentException {
+		for( i=0; i < result.length ; i++ ){
+			// The matrix has been destroyed
+			double val;
+			if ( sim.getSimilarity() ) val = sim.getPropertySimilarity(prop1[result[i][0]],prop2[result[i][1]]);
+			else val = 1 - sim.getPropertySimilarity(prop1[result[i][0]],prop2[result[i][1]]);
+			// JE: here using strict-> is a very good idea.
+			// it means that alignments with 0. similarity
+			// will be excluded from the best match.
+			if( val > threshold ){
+				addCell( new ObjectCell( (String)null, prop1[result[i][0]], prop2[result[i][1]], BasicRelation.createRelation("="), val ) );
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param params
+	 * @param threshold
+	 */
+	private void extractqqIfElseMethodD(Properties params, double threshold ){
+		if (  params.getProperty("noinst") == null ){
+			try {
+				// Create individual lists
+				Object[] ind1 = new Object[ontology1().nbIndividuals()];
+				Object[] ind2 = new Object[ontology2().nbIndividuals()];
+				int nbind1 = 0;
+				int nbind2 = 0;
+				this.extractqqIfElseMethodDInnerForA(ind1, ind2, nbind1, nbind2);
+
+				if ( nbind1 != 0 && nbind2 != 0 ) {
+					double[][] matrix = new double[nbind1][nbind2];
+					int i = 0;
+					int j = 0;
+					this.extractqqIfElseMethodDInnerForB(i, j, matrix, ind1, ind2, nbind1, nbind2);
+
+					// Pass it to the algorithm
+					int[][] result = callHungarianMethod( matrix, nbind1, nbind2 );
+					// Extract the result
+					this.extractqqIfElseMethodDInnerForC(i, result, ind1, ind2, threshold);
+				}
+			} catch (AlignmentException alex) { alex.printStackTrace(); //}
+			} catch (OntowrapException owex) { owex.printStackTrace(); }
+		}
+	}
+
+	/**
+	 *
+	 * @param ind1
+	 * @param ind2
+	 * @param nbind1
+	 * @param nbind2
+	 * @throws OntowrapException
+	 */
+	private void extractqqIfElseMethodDInnerForA(Object[] ind1, Object[] ind2, int nbind1, int nbind2) throws OntowrapException {
+		for( Object ob : ontology2().getIndividuals() ){
+			// We suppress anonymous individuals... this is not legitimate
+			if ( ontology2().getEntityURI( ob ) != null ) {
+				ind2[nbind2++] = ob;
+			}
+		}
+		for( Object ob : ontology1().getIndividuals() ){
+			// We suppress anonymous individuals... this is not legitimate
+			if ( ontology1().getEntityURI( ob ) != null ) {
+				ind1[nbind1++] = ob;
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param i
+	 * @param j
+	 * @param matrix
+	 * @param ind1
+	 * @param ind2
+	 * @param nbind1
+	 * @param nbind2
+	 */
+	private void extractqqIfElseMethodDInnerForB(int i,int  j, double[][] matrix, Object[] ind1, Object[] ind2, int nbind1, int nbind2){
+		for( i=0; i < nbind1; i++ ){
+			for( j=0; j < nbind2; j++ ){
+				if ( sim.getSimilarity() ) matrix[i][j] = sim.getIndividualSimilarity(ind1[i],ind2[j]);
+				else matrix[i][j] = 1 - sim.getIndividualSimilarity(ind1[i],ind2[j]);
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param i
+	 * @param result
+	 * @param ind1
+	 * @param ind2
+	 * @param threshold
+	 * @throws AlignmentException
+	 */
+	private void extractqqIfElseMethodDInnerForC(int i, int[][] result, Object[] ind1, Object[] ind2, double threshold) throws AlignmentException {
+		for( i=0; i < result.length ; i++ ){
+			// The matrix has been destroyed
+			double val;
+			if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity(ind1[result[i][0]],ind2[result[i][1]]);
+			else val = 1 - sim.getIndividualSimilarity(ind1[result[i][0]],ind2[result[i][1]]);
+			// JE: here using strict-> is a very good idea.
+			// it means that alignments with 0. similarity
+			// will be excluded from the best match.
+			if( val > threshold ){
+				addCell( new ObjectCell( (String)null, ind1[result[i][0]], ind2[result[i][1]], BasicRelation.createRelation("="), val ) );
+			}
+		}
+	}
 
     /**
      * Greedy algorithm:
