@@ -128,7 +128,7 @@ public class GenPlot {
 	String evalCN = "fr.inrialpes.exmo.align.impl.eval.PRecEvaluator";
 	String graphCN = "fr.inrialpes.exmo.align.impl.eval.PRGraphEvaluator";
 	while ((c = g.getopt()) != -1) {
-	    this.runSwitch(c, g, graphCN, evalCN, arg);
+	    this.runSwitch(c, g, arg);
 	}
 	Class<?> graphClass = Class.forName(graphCN);
 	Class[] cparams = {};
@@ -272,11 +272,9 @@ public class GenPlot {
 	 *
 	 * @param c
 	 * @param g
-	 * @param graphCN
-	 * @param evalCN
 	 * @param arg
 	 */
-    private void runSwitch(int c, Getopt g, String graphCN, String evalCN, String arg){
+    private void runSwitch(int c, Getopt g, String arg){
 		switch (c) {
 			case 'h' :
 				usage();
@@ -284,14 +282,6 @@ public class GenPlot {
 			case 'o' :
 		/* Write output here */
 				outFile = g.getOptarg();
-				break;
-			case 'e' :
-		/* Name of the evaluator to use */
-				evalCN = g.getOptarg();
-				break;
-			case 'g' :
-		/* Name of the graph display to use */
-				graphCN = g.getOptarg();
 				break;
 			case 't' :
 		/* Type of output (tex/tsv(/html/xml/ascii)) */
