@@ -619,7 +619,7 @@ public class GenPlot {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param table
 	 * @param writer
 	 */
@@ -640,23 +640,7 @@ public class GenPlot {
 	output.print("&chxt=x,x,y,y&chxr=0,0.0,1.0,0.1|2,0.0,1.0,0.1&chxl=1:|"+xlabel+"|3:|"+ylabel+"&chma=b&chxp=1,50|3,50&chxs=0N*sz1*|2N*sz1*");
 	output.print("&chd=t:"); // data
 	boolean firstalg = true;
-	for( Vector<Pair> table : result ) {
-	    if ( !firstalg ) output.print("|");
-	    firstalg = false;
-	    boolean firstpoint = true;
-	    String Yval = "|";
-	    for( Pair p : table ) {
-		if ( !firstpoint ) {
-		    output.print(",");
-		    Yval += ",";
-		}
-		firstpoint = false;
-		Yval += String.format("%1.2f", p.getY()*10);
-		if ( debug > 1 ) System.err.println( " >> "+p.getX()+" - "+p.getY() );
-		output.printf( "%1.2f", p.getX()*10 );
-	    }
-	    output.print( Yval );
-	}
+	this.printHTMLGGraphForA(result, firstalg);
 	output.print("&chdl="); // labels
 	int i = 0;
 	//String marktable[] = { "+", "*", "x", "-", "|", "o", "asterisk", "star", "oplus", "oplus*", "otimes", "otimes*", "square", "square*", "triangle", "triangle*", "diamond", "diamond*", "pentagon", "pentagon*"};
@@ -664,26 +648,81 @@ public class GenPlot {
 	String colortable[] = { "000000", "ffff00", "ff00ff", "00ffff", "ff0000", "00ff00", "0000ff", "888888", "8888ff", "88ff88", "ff8888", "8800ff", "88ff00", "008800", "ff8800", "0088ff", "000088","ff0088","00ff88", "888800", "880088", "008888", "880000", "008800", "000088", "88ffff", "ff88ff", "ffff88" };
 	String style = "";
 	String color = "";
-	for ( String m : listAlgo ) {
-	    if ( i > 0 ) {
-		output.print( "|" );
-		color += ",";
-		style += "|";
-	    }
-	    output.print( m );
-	    color += colortable[i%28];
-	    if ( !listEvaluators.get(i).isValid() ) {
-		style += "2,6,3";
-	    } else {
-		style += "2";
-	    }
-	    i++;
-	}
+	this.printHTMLGGraphForB(i, color , style, colortable);
 	//output.print("&chdlp=b"); // legend position (but ugly)
 	output.print("&chco="+color); // colors
 	output.print("&chls="+style); // linestyle
 	output.println("&chds=0,10\"/>");
     }
+
+	/**
+	 *
+	 * @param result
+	 * @param firstalg
+	 */
+	private void printHTMLGGraphForA(Vector<Vector<Pair>> result, boolean firstalg){
+		for( Vector<Pair> table : result ) {
+			if ( !firstalg ) output.print("|");
+			firstalg = false;
+			boolean firstpoint = true;
+			String Yval = "|";
+			this.printHTMLGGraphForAInner(table, firstpoint, Yval);
+			output.print( Yval );
+		}
+	}
+
+	/**
+	 *
+	 * @param table
+	 * @param firstpoint
+	 * @param Yval
+	 */
+	private void printHTMLGGraphForAInner(Vector<Pair> table, boolean firstpoint, String Yval){
+		for( Pair p : table ) {
+			if ( !firstpoint ) {
+				output.print(",");
+				Yval += ",";
+			}
+			firstpoint = false;
+			Yval += String.format("%1.2f", p.getY()*10);
+			if ( debug > 1 ) System.err.println( " >> "+p.getX()+" - "+p.getY() );
+			output.printf( "%1.2f", p.getX()*10 );
+		}
+	}
+
+	/**
+	 *
+	 * @param i
+	 * @param color
+	 * @param style
+	 * @param colortable
+	 */
+	private void printHTMLGGraphForB(int i, String color , String style, String colortable[]){
+		for ( String m : listAlgo ) {
+			if ( i > 0 ) {
+				output.print( "|" );
+				color += ",";
+				style += "|";
+			}
+			output.print( m );
+			color += colortable[i%28];
+			this.printHTMLGGraphForBInner(style, i);
+			i++;
+		}
+	}
+
+	/**
+	 *
+	 * @param style
+	 * @param i
+	 */
+	private void printHTMLGGraphForBInner(String style, int i){
+		if ( !listEvaluators.get(i).isValid() ) {
+			style += "2,6,3";
+		} else {
+			style += "2";
+		}
+	}
 
     // 2010: TSV output is not finished
     // It is supposed to provide
