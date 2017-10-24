@@ -332,7 +332,7 @@ public class GenPlot {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param index
 	 * @param arg
 	 * @param g
@@ -390,9 +390,8 @@ public class GenPlot {
 	if ( debug > 0 ) System.err.println("Directory : "+dir);
 	String prefix = dir.toURI().toString()+"/";
 
-	int nextdebug;
-	if ( debug < 2 ) nextdebug = 0;
-	else nextdebug = debug - 2;
+	int nextdebug = 0;
+	this.iterateAlignmentsIfElseA(nextdebug);
 	AlignmentParser aparser = new AlignmentParser( nextdebug );
 	Alignment refalign = null;
 
@@ -400,33 +399,13 @@ public class GenPlot {
 	    refalign = aparser.parse( prefix+"refalign.rdf" );
 	    if ( debug > 1 ) System.err.println(" Reference alignment parsed");
 	} catch ( Exception aex ) {
-	    if ( debug > 1 ) {
-		aex.printStackTrace();
-	    } else {
-		System.err.println("GenPlot cannot parse refalign : "+aex);
-	    };
+		this.iterateAlignmentsIfElseB(aex);
 	    return;
 	}
 
 	// for all alignments there,
-	for( int i = 0; i < size; i++ ) {
-	    String algo = listAlgo.get(i);
-	    Alignment al = null;
-	    if ( debug > 0 ) System.err.println("  Considering result "+algo+" ("+i+")");
-	    try {
-		aparser.initAlignment( null );
-		al = aparser.parse( prefix+algo+".rdf" );
-		if ( debug > 1 ) System.err.println(" Alignment "+algo+" parsed");
-	    } catch (Exception ex) { 
-		if ( debug > 1 ) {
-		    ex.printStackTrace();
-		} else {
-		    System.err.println("GenPlot: "+ex);
-		};
-	    }
-	    // even if empty, declare refalign
-	    evaluators.get(i).ingest( al, refalign );
-	}
+		this.iterateAlignmentsForC(refalign, aparser, prefix, evaluators);
+
 	// Unload the ontologies.
 	try {
 	    OntologyFactory.clear();
@@ -434,7 +413,67 @@ public class GenPlot {
 	    owex.printStackTrace();
 	}
     }
-    
+
+	/**
+	 *
+	 * @param refalign
+	 * @param aparser
+	 * @param prefix
+	 * @param evaluators
+	 */
+    private void iterateAlignmentsForC(Alignment refalign, AlignmentParser aparser, String prefix, Vector<GraphEvaluator> evaluators){
+		for( int i = 0; i < size; i++ ) {
+			String algo = listAlgo.get(i);
+			Alignment al = null;
+			if ( debug > 0 ) System.err.println("  Considering result "+algo+" ("+i+")");
+			try {
+				aparser.initAlignment( null );
+				al = aparser.parse( prefix+algo+".rdf" );
+				if ( debug > 1 ) System.err.println(" Alignment "+algo+" parsed");
+			} catch (Exception ex) {
+				this.iterateAlignmentsForCInner(ex);
+			}
+			// even if empty, declare refalign
+			evaluators.get(i).ingest( al, refalign );
+		}
+	}
+
+	/**
+	 * 
+	 * @param ex
+	 */
+	private void iterateAlignmentsForCInner(Exception ex){
+		if ( debug > 1 ) {
+			ex.printStackTrace();
+		} else {
+			System.err.println("GenPlot: "+ex);
+		}
+	}
+
+	/**
+	 *
+	 * @param nextdebug
+	 */
+    private void iterateAlignmentsIfElseA(int nextdebug){
+		if ( debug < 2 ) {
+			nextdebug = 0;
+		} else{
+			nextdebug = debug - 2;
+		}
+	}
+
+	/**
+	 *
+	 * @param aex
+	 */
+	private void iterateAlignmentsIfElseB(Exception aex){
+		if ( debug > 1 ) {
+			aex.printStackTrace();
+		} else {
+			System.err.println("GenPlot cannot parse refalign : "+aex);
+		}
+	}
+
     // should be OK for changing granularity
     // This is not really scalling...
     // This is unused
