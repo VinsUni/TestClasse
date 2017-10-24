@@ -136,6 +136,14 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 
     }
 
+	/**
+	 *
+	 * @param type
+	 * @param params
+	 * @param threshold
+	 * @return
+	 * @throws AlignmentException
+	 */
     private Alignment extractIfElseMethodA(String type, Properties params, double threshold) throws AlignmentException {
 		if ( type.equals("?*") || type.equals("1*") || type.equals("?+") || type.equals("1+") ) {
 			return extractqs(threshold, params);
@@ -144,6 +152,14 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		}
 	}
 
+	/**
+	 *
+	 * @param type
+	 * @param params
+	 * @param threshold
+	 * @return
+	 * @throws AlignmentException
+	 */
 	private Alignment extractIfElseMethodB(String type, Properties params, double threshold) throws AlignmentException {
 		if ( type.equals("??") || type.equals("1?") || type.equals("?1") || type.equals("11") ) {
 			return extractqq(threshold, params);
@@ -152,6 +168,14 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		}
 	}
 
+	/**
+	 *
+	 * @param type
+	 * @param params
+	 * @param threshold
+	 * @return
+	 * @throws AlignmentException
+	 */
 	private Alignment extractIfElseMethodC(String type, Properties params, double threshold) throws AlignmentException {
 		if (type.equals("*?") || type.equals("+?") || type.equals("*1") || type.equals("+1")) {
 			return extractqs(threshold, params);
@@ -160,6 +184,14 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		}
 	}
 
+	/**
+	 *
+	 * @param type
+	 * @param params
+	 * @param threshold
+	 * @return
+	 * @throws AlignmentException
+	 */
 	private Alignment extractIfElseMethodD(String type, Properties params, double threshold) throws AlignmentException {
 		if (type.equals("**") || type.equals("+*") || type.equals("*+") || type.equals("++")) {
 			return extractss(threshold, params);
@@ -187,58 +219,140 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	  ConcatenatedIterator pit1 = new
 	      ConcatenatedIterator(ontology1().getObjectProperties().iterator(),
 				   ontology1().getDataProperties().iterator());
-	  for( Object prop1 : pit1 ){
-	      found = false; max = threshold; val = 0.;
-	      Object prop2 = null;
-	      ConcatenatedIterator pit2 = new
-		  ConcatenatedIterator(ontology2().getObjectProperties().iterator(),
-				       ontology2().getDataProperties().iterator());
-	      for ( Object current : pit2 ){
-		  if ( sim.getSimilarity() ) val = sim.getPropertySimilarity(prop1,current);
-		  else val =  1. - sim.getPropertySimilarity(prop1,current);
-		  if ( val > max) {
-		      found = true; max = val; prop2 = current;
-		  }
-	      }
-	      if ( found ) addAlignCell(prop1,prop2, "=", max);
-	  }
+	  this.extractqsForMethodA(pit1, found, max, threshold, val);
+
 	  // Extract for classes
-	  for ( Object class1 : ontology1().getClasses() ) {
-	      found = false; max = threshold; val = 0;
-	      Object class2 = null;
-	      for ( Object current : ontology2().getClasses() ) {
-		  if ( sim.getSimilarity() ) val = sim.getClassSimilarity(class1,current);
-		  else val = 1. - sim.getClassSimilarity(class1,current);
-		  if (val > max) {
-		      found = true; max = val; class2 = current;
-		  }
-	      }
-	      if ( found ) addAlignCell(class1, class2, "=", max);
-	  }
+		  this.extractqsForMethodB(found, max, threshold, val);
+
 	  // Extract for individuals
 	  if (  params.getProperty("noinst") == null ){
-	      for ( Object ind1 : ontology1().getIndividuals() ) {
-		  if ( ontology1().getEntityURI( ind1 ) != null ) {
-		      found = false; max = threshold; val = 0;
-		      Object ind2 = null;
-		      for ( Object current : ontology2().getIndividuals() ) {
-			  if ( ontology2().getEntityURI( current ) != null ) {
-			      if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity( ind1, current );
-			      else val = 1 - sim.getIndividualSimilarity( ind1, current );
-			      if (val > max) {
-				  found = true; max = val; ind2 = current;
-			      }
-			  }
-		      }
-		      if ( found ) addAlignCell(ind1,ind2, "=", max);
-		  }
-	      }
+	      this.extractqsForMethodC(found, max, threshold, val);
 	  }
       } catch (OntowrapException owex) { owex.printStackTrace(); //}
       } catch (AlignmentException alex) { alex.printStackTrace(); }
       return((Alignment)this);
     }
 
+	/**
+	 *
+	 * @param pit1
+	 * @param found
+	 * @param max
+	 * @param threshold
+	 * @param val
+	 * @throws AlignmentException
+	 * @throws OntowrapException
+	 */
+    private void extractqsForMethodA(ConcatenatedIterator pit1, boolean found, double max, double threshold, double val) throws AlignmentException, OntowrapException {
+		for( Object prop1 : pit1 ){
+			found = false; max = threshold; val = 0.;
+			Object prop2 = null;
+			ConcatenatedIterator pit2 = new
+					ConcatenatedIterator(ontology2().getObjectProperties().iterator(),
+					ontology2().getDataProperties().iterator());
+			this.extractqsInnerForMethodA(pit2, prop1, prop2, found, max, threshold, val);
+			if ( found ) addAlignCell(prop1,prop2, "=", max);
+		}
+	}
+
+	/**
+	 *
+	 * @param pit2
+	 * @param prop1
+	 * @param prop2
+	 * @param found
+	 * @param max
+	 * @param threshold
+	 * @param val
+	 */
+	private void extractqsInnerForMethodA(ConcatenatedIterator pit2, Object prop1, Object prop2, boolean found, double max, double threshold, double val){
+		for ( Object current : pit2 ){
+			if ( sim.getSimilarity() ) val = sim.getPropertySimilarity(prop1,current);
+			else val =  1. - sim.getPropertySimilarity(prop1,current);
+			if ( val > max) {
+				found = true; max = val; prop2 = current;
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param found
+	 * @param max
+	 * @param threshold
+	 * @param val
+	 * @throws OntowrapException
+	 * @throws AlignmentException
+	 */
+	private void extractqsForMethodB( boolean found, double max, double threshold, double val) throws OntowrapException, AlignmentException {
+		for ( Object class1 : ontology1().getClasses() ) {
+			found = false; max = threshold; val = 0;
+			Object class2 = null;
+			this.extractqsInnerForMethodB(class1, class2, found, max, val);
+			if ( found ) addAlignCell(class1, class2, "=", max);
+		}
+	}
+
+	/**
+	 *
+	 * @param class1
+	 * @param class2
+	 * @param found
+	 * @param max
+	 * @param val
+	 * @throws OntowrapException
+	 */
+	private void extractqsInnerForMethodB(Object class1, Object class2, boolean found, double max, double val) throws OntowrapException {
+		for ( Object current : ontology2().getClasses() ) {
+			if ( sim.getSimilarity() ) val = sim.getClassSimilarity(class1,current);
+			else val = 1. - sim.getClassSimilarity(class1,current);
+			if (val > max) {
+				found = true; max = val; class2 = current;
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param found
+	 * @param max
+	 * @param threshold
+	 * @param val
+	 * @throws OntowrapException
+	 * @throws AlignmentException
+	 */
+	private void extractqsForMethodC( boolean found, double max, double threshold, double val) throws OntowrapException, AlignmentException {
+		for ( Object ind1 : ontology1().getIndividuals() ) {
+			if ( ontology1().getEntityURI( ind1 ) != null ) {
+				found = false; max = threshold; val = 0;
+				Object ind2 = null;
+				this.extractqsInnerForMethodC(ind1, ind2, found, max, val);
+				if ( found ) addAlignCell(ind1,ind2, "=", max);
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param ind1
+	 * @param ind2
+	 * @param found
+	 * @param max
+	 * @param val
+	 * @throws OntowrapException
+	 */
+	private void extractqsInnerForMethodC(Object ind1, Object ind2, boolean found, double max, double val) throws OntowrapException {
+		for ( Object current : ontology2().getIndividuals() ) {
+			if ( ontology2().getEntityURI( current ) != null ) {
+				if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity( ind1, current );
+				else val = 1 - sim.getIndividualSimilarity( ind1, current );
+				if (val > max) {
+					found = true; max = val; ind2 = current;
+				}
+			}
+		}
+	}
+	
     /**
      * Extract the alignment of a ** type
      * Symmetric: return all elements above threshold
