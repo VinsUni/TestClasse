@@ -747,35 +747,8 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		double val = 0;
 		//TreeSet could be replaced by something else
 		//The comparator must always tell that things are different!
-		SortedSet<Cell> cellSet = new TreeSet<Cell>(
-				new Comparator<Cell>() {
-					public int compare( Cell o1, Cell o2 )
-							throws ClassCastException{
-						try {
-							//System.err.println(o1.getObject1()+" -- "+o1.getObject2()+" // "+o2.getObject1()+" -- "+o2.getObject2());
-							if ( o1.getStrength() > o2.getStrength() ){
-								return -1;
-							} else if ( o1.getStrength() < o2.getStrength() ){
-								return 1;
-							} else if ( ontology1().getEntityName( o1.getObject1() ) == null
-									|| ontology2().getEntityName( o2.getObject1() ) == null ) {
-								return -1;
-							} else if ( ontology1().getEntityName( o1.getObject1()).compareTo( ontology2().getEntityName( o2.getObject1() ) ) > 0 ) {
-								return -1;
-							} else if ( ontology1().getEntityName( o1.getObject1()).compareTo( ontology2().getEntityName( o2.getObject1() ) ) < 0 ) {
-								return 1;
-							} else if ( ontology1().getEntityName( o1.getObject2() ) == null
-									|| ontology2().getEntityName( o2.getObject2() ) == null ) {
-								return -1;
-							} else if ( ontology1().getEntityName( o1.getObject2()).compareTo( ontology2().getEntityName( o2.getObject2() ) ) > 0 ) {
-								return -1;
-								// Assume they have different names
-							} else { return 1; }
-						} catch ( OntowrapException e) {
-							e.printStackTrace(); return 0;}
-					}
-				}
-		);
+		SortedSet<Cell> cellSet = null;
+		this.cellSetMethod(cellSet);
 		try {
 			// Get all the matrix above threshold in the SortedSet
 			// Plus a map from the objects to the cells
@@ -809,6 +782,38 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 			owex.printStackTrace();
 		}
 		return((Alignment)this);
+	}
+
+	private void cellSetMethod(SortedSet<Cell> cellSet){
+		 cellSet = new TreeSet<Cell>(
+				new Comparator<Cell>() {
+					public int compare( Cell o1, Cell o2 )
+							throws ClassCastException{
+						try {
+							//System.err.println(o1.getObject1()+" -- "+o1.getObject2()+" // "+o2.getObject1()+" -- "+o2.getObject2());
+							if ( o1.getStrength() > o2.getStrength() ){
+								return -1;
+							} else if ( o1.getStrength() < o2.getStrength() ){
+								return 1;
+							} else if ( ontology1().getEntityName( o1.getObject1() ) == null
+									|| ontology2().getEntityName( o2.getObject1() ) == null ) {
+								return -1;
+							} else if ( ontology1().getEntityName( o1.getObject1()).compareTo( ontology2().getEntityName( o2.getObject1() ) ) > 0 ) {
+								return -1;
+							} else if ( ontology1().getEntityName( o1.getObject1()).compareTo( ontology2().getEntityName( o2.getObject1() ) ) < 0 ) {
+								return 1;
+							} else if ( ontology1().getEntityName( o1.getObject2() ) == null
+									|| ontology2().getEntityName( o2.getObject2() ) == null ) {
+								return -1;
+							} else if ( ontology1().getEntityName( o1.getObject2()).compareTo( ontology2().getEntityName( o2.getObject2() ) ) > 0 ) {
+								return -1;
+								// Assume they have different names
+							} else { return 1; }
+						} catch ( OntowrapException e) {
+							e.printStackTrace(); return 0;}
+					}
+				}
+		);
 	}
 
 	/**
