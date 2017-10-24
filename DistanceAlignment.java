@@ -352,7 +352,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 			}
 		}
 	}
-	
+
     /**
      * Extract the alignment of a ** type
      * Symmetric: return all elements above threshold
@@ -366,42 +366,89 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	    ConcatenatedIterator pit1 = new
 		ConcatenatedIterator(ontology1().getObjectProperties().iterator(),
 				     ontology1().getDataProperties().iterator());
-	    for( Object prop1 : pit1 ){
-		ConcatenatedIterator pit2 = new
-		    ConcatenatedIterator(ontology2().getObjectProperties().iterator(),
-					 ontology2().getDataProperties().iterator());
-		for ( Object prop2 : pit2 ){
-		    if ( sim.getSimilarity() ) val = sim.getPropertySimilarity(prop1,prop2);
-		    else val =  1. - sim.getPropertySimilarity(prop1,prop2);
-		    if ( val > threshold ) addAlignCell(prop1,prop2, "=", val);
-		}
-	    }
+	   this.extractssForMethodA( pit1, val, threshold);
 	    // Extract for classes
-	    for ( Object class1 : ontology1().getClasses() ) {
-		for ( Object class2 : ontology2().getClasses() ) {
-		    if ( sim.getSimilarity() ) val = sim.getClassSimilarity(class1,class2);
-		    else val = 1. - sim.getClassSimilarity(class1,class2);
-		    if (val > threshold ) addAlignCell(class1, class2, "=", val);
-		}
-	    }
+	    this.extractssForMethodB(val, threshold);
 	    // Extract for individuals
-	    if (  params.getProperty("noinst") == null ){
-		for ( Object ind1 : ontology1().getIndividuals() ) {
-		    if ( ontology1().getEntityURI( ind1 ) != null ) {
-			for ( Object ind2 : ontology2().getIndividuals() ) {
-			    if ( ontology2().getEntityURI( ind2 ) != null ) {
-				if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity( ind1, ind2 );
-				else val = 1 - sim.getIndividualSimilarity( ind1, ind2 );
-				if ( val > threshold ) addAlignCell(ind1,ind2, "=", val);
-			    }
-			}
-		    }
-		}
+
+		if (  params.getProperty("noinst") == null ){
+		this.extractssForMethodC(val, threshold);
 	    }
 	} catch (OntowrapException owex) { owex.printStackTrace(); //}
 	} catch (AlignmentException alex) { alex.printStackTrace(); }
 	return((Alignment)this);
     }
+
+	/**
+	 *
+	 * @param pit1
+	 * @param val
+	 * @param threshold
+	 * @throws OntowrapException
+	 * @throws AlignmentException
+	 */
+    private void extractssForMethodA(ConcatenatedIterator pit1, double val, double threshold) throws OntowrapException, AlignmentException {
+		for( Object prop1 : pit1 ){
+			ConcatenatedIterator pit2 = new
+					ConcatenatedIterator(ontology2().getObjectProperties().iterator(),
+					ontology2().getDataProperties().iterator());
+			for ( Object prop2 : pit2 ){
+				if ( sim.getSimilarity() ) val = sim.getPropertySimilarity(prop1,prop2);
+				else val =  1. - sim.getPropertySimilarity(prop1,prop2);
+				if ( val > threshold ) addAlignCell(prop1,prop2, "=", val);
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param val
+	 * @param threshold
+	 * @throws OntowrapException
+	 * @throws AlignmentException
+	 */
+	private void extractssForMethodB(double val, double threshold) throws OntowrapException, AlignmentException {
+		for ( Object class1 : ontology1().getClasses() ) {
+			for ( Object class2 : ontology2().getClasses() ) {
+				if ( sim.getSimilarity() ) val = sim.getClassSimilarity(class1,class2);
+				else val = 1. - sim.getClassSimilarity(class1,class2);
+				if (val > threshold ) addAlignCell(class1, class2, "=", val);
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param val
+	 * @param threshold
+	 * @throws OntowrapException
+	 * @throws AlignmentException
+	 */
+	private void extractssForMethodC(double val, double threshold) throws OntowrapException, AlignmentException {
+		for ( Object ind1 : ontology1().getIndividuals() ) {
+			if ( ontology1().getEntityURI( ind1 ) != null ) {
+				this.extractssInnerForMethodC(ind1, val, threshold);
+			}
+		}
+	}
+
+	/**
+	 * 
+	 * @param ind1
+	 * @param val
+	 * @param threshold
+	 * @throws OntowrapException
+	 * @throws AlignmentException
+	 */
+	private void extractssInnerForMethodC(Object ind1, double val, double threshold) throws OntowrapException, AlignmentException {
+		for ( Object ind2 : ontology2().getIndividuals() ) {
+			if ( ontology2().getEntityURI( ind2 ) != null ) {
+				if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity( ind1, ind2 );
+				else val = 1 - sim.getIndividualSimilarity( ind1, ind2 );
+				if ( val > threshold ) addAlignCell(ind1,ind2, "=", val);
+			}
+		}
+	}
 
     /**
      * Extract the alignment of a ?? type
