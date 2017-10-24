@@ -784,37 +784,135 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		return((Alignment)this);
 	}
 
+	/**
+	 *
+	 * @param o1
+	 * @param o2
+	 * @return
+	 * @throws OntowrapException
+	 */
+	int compareIfElseA(Cell o1, Cell o2) throws OntowrapException {
+		if ( o1.getStrength() > o2.getStrength() ){
+			return -1;
+		} else{
+			return compareIfElseB(o1, o2);
+		}
+	}
+
+	/**
+	 *
+	 * @param o1
+	 * @param o2
+	 * @return
+	 * @throws OntowrapException
+	 */
+	int compareIfElseB(Cell o1, Cell o2) throws OntowrapException {
+		if ( o1.getStrength() < o2.getStrength() ){
+			return 1;
+		} else{
+			return compareIfElseC(o1, o2);
+		}
+	}
+
+	/**
+	 *
+	 * @param o1
+	 * @param o2
+	 * @return
+	 * @throws OntowrapException
+	 */
+	int compareIfElseC(Cell o1, Cell o2) throws OntowrapException {
+		if ( ontology1().getEntityName( o1.getObject1() ) == null
+				|| ontology2().getEntityName( o2.getObject1() ) == null ) {
+			return -1;
+		} else {
+			return compareIfElseD(o1, o2);
+		}
+	}
+
+	/**
+	 *
+	 * @param o1
+	 * @param o2
+	 * @return
+	 * @throws OntowrapException
+	 */
+	int compareIfElseD(Cell o1, Cell o2) throws OntowrapException {
+		if ( ontology1().getEntityName( o1.getObject1()).compareTo( ontology2().getEntityName( o2.getObject1() ) ) > 0 ) {
+			return -1;
+		} else {
+			return compareIfElseE(o1, o2);
+		}
+	}
+
+	/**
+	 *
+	 * @param o1
+	 * @param o2
+	 * @return
+	 * @throws OntowrapException
+	 */
+	int compareIfElseE(Cell o1, Cell o2) throws OntowrapException {
+		if ( ontology1().getEntityName( o1.getObject1()).compareTo( ontology2().getEntityName( o2.getObject1() ) ) < 0 ) {
+			return 1;
+		} else {
+			return compareIfElseF(o1, o2);
+		}
+	}
+
+	/**
+	 *
+	 * @param o1
+	 * @param o2
+	 * @return
+	 * @throws OntowrapException
+	 */
+	int compareIfElseF(Cell o1, Cell o2) throws OntowrapException {
+		if ( ontology1().getEntityName( o1.getObject2() ) == null
+				|| ontology2().getEntityName( o2.getObject2() ) == null ) {
+			return -1;
+		} else {
+			return compareIfElseG(o1, o2);
+		}
+	}
+
+	/**
+	 *
+	 * @param o1
+	 * @param o2
+	 * @return
+	 * @throws OntowrapException
+	 */
+	int compareIfElseG(Cell o1, Cell o2) throws OntowrapException {
+		if ( ontology1().getEntityName( o1.getObject2()).compareTo( ontology2().getEntityName( o2.getObject2() ) ) > 0 ) {
+			return -1;
+			// Assume they have different names
+		} else {
+			return 1;
+		}
+	}
+
+	/**
+	 *
+	 * @param cellSet
+	 */
 	private void cellSetMethod(SortedSet<Cell> cellSet){
-		 cellSet = new TreeSet<Cell>(
+		cellSet = new TreeSet<Cell>(
 				new Comparator<Cell>() {
 					public int compare( Cell o1, Cell o2 )
 							throws ClassCastException{
+						//System.err.println(o1.getObject1()+" -- "+o1.getObject2()+" // "+o2.getObject1()+" -- "+o2.getObject2());
 						try {
-							//System.err.println(o1.getObject1()+" -- "+o1.getObject2()+" // "+o2.getObject1()+" -- "+o2.getObject2());
-							if ( o1.getStrength() > o2.getStrength() ){
-								return -1;
-							} else if ( o1.getStrength() < o2.getStrength() ){
-								return 1;
-							} else if ( ontology1().getEntityName( o1.getObject1() ) == null
-									|| ontology2().getEntityName( o2.getObject1() ) == null ) {
-								return -1;
-							} else if ( ontology1().getEntityName( o1.getObject1()).compareTo( ontology2().getEntityName( o2.getObject1() ) ) > 0 ) {
-								return -1;
-							} else if ( ontology1().getEntityName( o1.getObject1()).compareTo( ontology2().getEntityName( o2.getObject1() ) ) < 0 ) {
-								return 1;
-							} else if ( ontology1().getEntityName( o1.getObject2() ) == null
-									|| ontology2().getEntityName( o2.getObject2() ) == null ) {
-								return -1;
-							} else if ( ontology1().getEntityName( o1.getObject2()).compareTo( ontology2().getEntityName( o2.getObject2() ) ) > 0 ) {
-								return -1;
-								// Assume they have different names
-							} else { return 1; }
-						} catch ( OntowrapException e) {
-							e.printStackTrace(); return 0;}
+							return compareIfElseA(o1, o2);
+						} catch (OntowrapException e) {
+							e.printStackTrace();
+						}
+						return -1;
 					}
 				}
 		);
 	}
+
 
 	/**
 	 * New Method extractqqgreedyForMethodA()
@@ -919,3 +1017,6 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		}
 	}
 }
+
+
+
