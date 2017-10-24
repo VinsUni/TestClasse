@@ -896,7 +896,7 @@ public class JWNLDistances {
     }
 
 	/**
-	 * 
+	 *
 	 * @param s1
 	 * @param index
 	 * @param sim
@@ -1025,37 +1025,8 @@ public class JWNLDistances {
                 Synset[] Syno1 = index1.getSenses();
                 Synset[] Syno2 = index2.getSenses();
                 for (int i = 0; i < index1.getSenseCount(); i++) {
-
                     Synset synset1 = Syno1[i];
-                    for (int k = 0; k < index2.getSenseCount(); k++) {
-
-                        Synset synset2 = Syno2[k];
-
-                        List hypernymList1 = PointerUtils.getInstance()
-                                .getHypernymTree(synset1).toList();
-                        List hypernymList2 = PointerUtils.getInstance()
-                                .getHypernymTree(synset2).toList();
-
-                        Iterator list1It = hypernymList1.iterator();
-                        // browse lists
-                        while (list1It.hasNext()) {
-                            ptnl1 = (PointerTargetNodeList) list1It.next();
-                            Iterator list2It = hypernymList2.iterator();
-                            while (list2It.hasNext()) {
-                                ptnl2 = (PointerTargetNodeList) list2It.next();
-
-                                int cc = getCommonConcepts(ptnl1, ptnl2);
-                                if (cc > maxBetweenLists) {
-                                    maxBetweenLists = cc;
-                                    best1 = ptnl1;
-                                    best2 = ptnl2;
-                                }
-                            }
-                        }
-                        if (maxBetweenLists > maxCommon) {
-                            maxCommon = maxBetweenLists;
-                        }
-                    }
+                    this.computeTokenSimilarityInnerA( index2, ptnl1, ptnl2, maxBetweenLists, maxCommon, best1, best2, Syno1, synset1, Syno2);
                 }
                 // System.err.println("common = " + maxCommon);
                 // System.err.println("value = "
@@ -1074,6 +1045,70 @@ public class JWNLDistances {
         return 0;
     }
 
+	/**
+	 *
+	 * @param index2
+	 * @param ptnl1
+	 * @param ptnl2
+	 * @param maxBetweenLists
+	 * @param maxCommon
+	 * @param best1
+	 * @param best2
+	 * @param Syno1
+	 * @param synset1
+	 * @param Syno2
+	 */
+    private void computeTokenSimilarityInnerA(IndexWord index2, PointerTargetNodeList ptnl1, PointerTargetNodeList ptnl2, int maxBetweenLists, double maxCommon, PointerTargetNodeList best1, PointerTargetNodeList best2, Synset[] Syno1, Synset synset1, Synset[] Syno2){
+		for (int k = 0; k < index2.getSenseCount(); k++) {
+
+			Synset synset2 = Syno2[k];
+
+			List hypernymList1 = PointerUtils.getInstance()
+					.getHypernymTree(synset1).toList();
+			List hypernymList2 = PointerUtils.getInstance()
+					.getHypernymTree(synset2).toList();
+
+			Iterator list1It = hypernymList1.iterator();
+			// browse lists
+			while (list1It.hasNext()) {
+				ptnl1 = (PointerTargetNodeList) list1It.next();
+				Iterator list2It = hypernymList2.iterator();
+				this.computeTokenSimilarityInnerAInnerA(list2It,  ptnl1, ptnl2, maxBetweenLists,  best1, best2);
+			}
+			if (maxBetweenLists > maxCommon) {
+				maxCommon = maxBetweenLists;
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param list2It
+	 * @param ptnl1
+	 * @param ptnl2
+	 * @param maxBetweenLists
+	 * @param best1
+	 * @param best2
+	 */
+	private void computeTokenSimilarityInnerAInnerA(Iterator list2It, PointerTargetNodeList ptnl1, PointerTargetNodeList ptnl2, int maxBetweenLists, PointerTargetNodeList best1, PointerTargetNodeList best2){
+		while (list2It.hasNext()) {
+			ptnl2 = (PointerTargetNodeList) list2It.next();
+
+			int cc = getCommonConcepts(ptnl1, ptnl2);
+			if (cc > maxBetweenLists) {
+				maxBetweenLists = cc;
+				best1 = ptnl1;
+				best2 = ptnl2;
+			}
+		}
+	}
+
+	/**
+	 * 
+	 * @param index1
+	 * @param index2
+	 * @return
+	 */
     public double findMatchForAdj(IndexWord index1, IndexWord index2) {
         // the max number of common concepts between the two tokens
         double value = 0;
