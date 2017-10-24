@@ -889,30 +889,46 @@ public class JWNLDistances {
         if ( s1.equals(s2) || s1.toLowerCase().equals(s2.toLowerCase())) {
             return 1;
         } else {
-            if (s1.equals(s1.toUpperCase()) || s1.equals(s1.toLowerCase())) {
-                try {
-                    // Lookup for first string
-                    index = dictionary.lookupIndexWord(POS.NOUN, s1);
-                    if (index == null) {
-                        index = dictionary.lookupIndexWord(POS.ADJECTIVE, s1);
-                    }
-                    if (index == null) {
-                        index = dictionary.lookupIndexWord(POS.VERB, s1);
-		    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    System.exit(-1);
-                }
-                // if not found in the dictionary
-                if ( index == null ) return (1 - dists1s2);
-                else sim = compareComponentNames(s1, s2);
-            }
-            else sim = compareComponentNames(s1, s2);
+        	this.computeSimilarityIfElseMethodA(s1, index, sim, s2, dists1s2);
         }
         // return sim;
         return Math.max(sim, 1 - dists1s2);
     }
-    
+
+	/**
+	 * 
+	 * @param s1
+	 * @param index
+	 * @param sim
+	 * @param s2
+	 * @param dists1s2
+	 * @return
+	 */
+    private double computeSimilarityIfElseMethodA(String s1, IndexWord index, double sim, String s2, double dists1s2){
+		if (s1.equals(s1.toUpperCase()) || s1.equals(s1.toLowerCase())) {
+			try {
+				// Lookup for first string
+				index = dictionary.lookupIndexWord(POS.NOUN, s1);
+				if (index == null) {
+					index = dictionary.lookupIndexWord(POS.ADJECTIVE, s1);
+				}
+				if (index == null) {
+					index = dictionary.lookupIndexWord(POS.VERB, s1);
+				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				System.exit(-1);
+			}
+			// if not found in the dictionary
+			if ( index == null ) return (1 - dists1s2);
+			else sim = compareComponentNames(s1, s2);
+		}else{
+			sim = compareComponentNames(s1, s2);
+			return sim;
+		}
+		return sim;
+	}
+
     public double compareComponentNames(String s1, String s2) {
         Vector s1Tokens;
         Vector s2Tokens;
