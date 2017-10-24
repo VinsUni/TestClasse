@@ -7,18 +7,18 @@
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation; either version 2.1 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  */
 
-package fr.inrialpes.exmo.align.impl.;
+package fr.inrialpes.exmo.align.impl;
 
 import java.lang.ClassCastException;
 import java.util.TreeSet;
@@ -44,7 +44,7 @@ import fr.inrialpes.exmo.ontosim.util.HungarianAlgorithm;
  * similarity structure is defined as such.
  *
  * @author Jérôme Euzenat
- * @version $Id: DistanceAlignment.java 1630 2011-09-15 20:29:40Z euzenat $ 
+ * @version $Id: DistanceAlignment.java 1630 2011-09-15 20:29:40Z euzenat $
  */
 
 public abstract class DistanceAlignment extends ObjectAlignment implements AlignmentProcess {
@@ -64,7 +64,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
      **/
     public void align( Alignment alignment, Properties params ) throws AlignmentException {
 	loadInit( alignment );
-	if (  params.getProperty("type") != null ) 
+	if (  params.getProperty("type") != null )
 	    setType( params.getProperty("type") );
 	// This is a 1:1 alignment in fact
 	else setType("11");
@@ -156,13 +156,13 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 
       try {
 	  // Extract for properties
-	  ConcatenatedIterator pit1 = new 
+	  ConcatenatedIterator pit1 = new
 	      ConcatenatedIterator(ontology1().getObjectProperties().iterator(),
 				   ontology1().getDataProperties().iterator());
 	  for( Object prop1 : pit1 ){
 	      found = false; max = threshold; val = 0.;
 	      Object prop2 = null;
-	      ConcatenatedIterator pit2 = new 
+	      ConcatenatedIterator pit2 = new
 		  ConcatenatedIterator(ontology2().getObjectProperties().iterator(),
 				       ontology2().getDataProperties().iterator());
 	      for ( Object current : pit2 ){
@@ -221,11 +221,11 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	double val = 0.;
 	try {
 	    // Extract for properties
-	    ConcatenatedIterator pit1 = new 
+	    ConcatenatedIterator pit1 = new
 		ConcatenatedIterator(ontology1().getObjectProperties().iterator(),
 				     ontology1().getDataProperties().iterator());
 	    for( Object prop1 : pit1 ){
-		ConcatenatedIterator pit2 = new 
+		ConcatenatedIterator pit2 = new
 		    ConcatenatedIterator(ontology2().getObjectProperties().iterator(),
 					 ontology2().getDataProperties().iterator());
 		for ( Object prop2 : pit2 ){
@@ -263,7 +263,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 
     /**
      * Extract the alignment of a ?? type
-     * 
+     *
      * exact algorithm using the Hungarian method.
      * This algorithm contains several guards to prevent the HungarianAlgorithm to
      * raise problems:
@@ -307,7 +307,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		    else val = 1 - sim.getClassSimilarity(class1[result[i][0]],class2[result[i][1]]);
 		    // JE: here using strict-> is a very good idea.
 		    // it means that correspondences with 0. similarity
-		    // will be excluded from the best match. 
+		    // will be excluded from the best match.
 		    if( val > threshold ){
 			addCell( new ObjectCell( (String)null, class1[result[i][0]], class2[result[i][1]], BasicRelation.createRelation("="), val ) );
 		    }
@@ -324,12 +324,12 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		Object[] prop1 = new Object[nbprop1];
 		Object[] prop2 = new Object[nbprop2];
 		int i = 0;
-		ConcatenatedIterator pit1 = new 
+		ConcatenatedIterator pit1 = new
 		    ConcatenatedIterator(ontology1().getObjectProperties().iterator(),
 					 ontology1().getDataProperties().iterator());
 		for ( Object ob: pit1 ) prop1[i++] = ob;
 		int j = 0;
-		ConcatenatedIterator pit2 = new 
+		ConcatenatedIterator pit2 = new
 		    ConcatenatedIterator(ontology2().getObjectProperties().iterator(),
 					 ontology2().getDataProperties().iterator());
 		for ( Object ob: pit2 ) prop2[j++] = ob;
@@ -349,7 +349,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 		    else val = 1 - sim.getPropertySimilarity(prop1[result[i][0]],prop2[result[i][1]]);
 		    // JE: here using strict-> is a very good idea.
 		    // it means that alignments with 0. similarity
-		    // will be excluded from the best match. 
+		    // will be excluded from the best match.
 		    if( val > threshold ){
 			addCell( new ObjectCell( (String)null, prop1[result[i][0]], prop2[result[i][1]], BasicRelation.createRelation("="), val ) );
 		    }
@@ -396,7 +396,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 			else val = 1 - sim.getIndividualSimilarity(ind1[result[i][0]],ind2[result[i][1]]);
 			// JE: here using strict-> is a very good idea.
 			// it means that alignments with 0. similarity
-			// will be excluded from the best match. 
+			// will be excluded from the best match.
 			if( val > threshold ){
 			    addCell( new ObjectCell( (String)null, ind1[result[i][0]], ind2[result[i][1]], BasicRelation.createRelation("="), val ) );
 			}
@@ -416,10 +416,10 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	}
 	int[][] result = HungarianAlgorithm.hgAlgorithm( matrix, "max" );
 	if ( transposed ) {
-	    for( int k=0; k < result.length ; k++ ) { 
-		int val = result[k][0]; result[k][0] = result[k][1]; result[k][1] = val; 
+	    for( int k=0; k < result.length ; k++ ) {
+		int val = result[k][0]; result[k][0] = result[k][1]; result[k][1] = val;
 	    }
-	    
+
 	}
 	return result;
     }
@@ -428,7 +428,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
      * Greedy algorithm:
      * 1) dump the part of the matrix distance above threshold in a sorted set
      * 2) traverse the sorted set and each time a correspondence involving two
-     *    entities that have no correspondence is encountered, add it to the 
+     *    entities that have no correspondence is encountered, add it to the
      *    alignment.
      * Complexity: O(n^2.logn)
      * Pitfall: no global optimality is warranted, nor stable marriage
@@ -438,72 +438,82 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
      * overall similarity 1.1, while the optimum is the second solution
      * with overall of 1.8.
      */
-    @SuppressWarnings("unchecked") //ConcatenatedIterator
-    public Alignment extractqqgreedy( double threshold, Properties params) {
-	double val = 0;
-	//TreeSet could be replaced by something else
-	//The comparator must always tell that things are different!
-	SortedSet<Cell> cellSet = new TreeSet<Cell>(
-			    new Comparator<Cell>() {
-				public int compare( Cell o1, Cell o2 )
-				    throws ClassCastException{
-				    try {
-					//System.err.println(o1.getObject1()+" -- "+o1.getObject2()+" // "+o2.getObject1()+" -- "+o2.getObject2());
-					if ( o1.getStrength() > o2.getStrength() ){
-					    return -1;
-					} else if ( o1.getStrength() < o2.getStrength() ){
-					    return 1;
-					} else if ( ontology1().getEntityName( o1.getObject1() ) == null
-						    || ontology2().getEntityName( o2.getObject1() ) == null ) {
-					    return -1;
-					} else if ( ontology1().getEntityName( o1.getObject1()).compareTo( ontology2().getEntityName( o2.getObject1() ) ) > 0 ) {
-					    return -1;
-					} else if ( ontology1().getEntityName( o1.getObject1()).compareTo( ontology2().getEntityName( o2.getObject1() ) ) < 0 ) {
-					    return 1;
-					} else if ( ontology1().getEntityName( o1.getObject2() ) == null
-						    || ontology2().getEntityName( o2.getObject2() ) == null ) {
-					    return -1;
-					} else if ( ontology1().getEntityName( o1.getObject2()).compareTo( ontology2().getEntityName( o2.getObject2() ) ) > 0 ) {
-					    return -1;
-					// Assume they have different names
-					} else { return 1; }
-				    } catch ( OntowrapException e) { 
-					e.printStackTrace(); return 0;}
+	@SuppressWarnings("unchecked") //ConcatenatedIterator
+	public Alignment extractqqgreedy( double threshold, Properties params) {
+		double val = 0;
+		//TreeSet could be replaced by something else
+		//The comparator must always tell that things are different!
+		SortedSet<Cell> cellSet = new TreeSet<Cell>(
+				new Comparator<Cell>() {
+					public int compare( Cell o1, Cell o2 )
+							throws ClassCastException{
+						try {
+							//System.err.println(o1.getObject1()+" -- "+o1.getObject2()+" // "+o2.getObject1()+" -- "+o2.getObject2());
+							if ( o1.getStrength() > o2.getStrength() ){
+								return -1;
+							} else if ( o1.getStrength() < o2.getStrength() ){
+								return 1;
+							} else if ( ontology1().getEntityName( o1.getObject1() ) == null
+									|| ontology2().getEntityName( o2.getObject1() ) == null ) {
+								return -1;
+							} else if ( ontology1().getEntityName( o1.getObject1()).compareTo( ontology2().getEntityName( o2.getObject1() ) ) > 0 ) {
+								return -1;
+							} else if ( ontology1().getEntityName( o1.getObject1()).compareTo( ontology2().getEntityName( o2.getObject1() ) ) < 0 ) {
+								return 1;
+							} else if ( ontology1().getEntityName( o1.getObject2() ) == null
+									|| ontology2().getEntityName( o2.getObject2() ) == null ) {
+								return -1;
+							} else if ( ontology1().getEntityName( o1.getObject2()).compareTo( ontology2().getEntityName( o2.getObject2() ) ) > 0 ) {
+								return -1;
+								// Assume they have different names
+							} else { return 1; }
+						} catch ( OntowrapException e) {
+							e.printStackTrace(); return 0;}
+					}
 				}
-			    }
-			    );
-      try {
-	  // Get all the matrix above threshold in the SortedSet
-	  // Plus a map from the objects to the cells
-	  // O(n^2.log n)
-	  // for classes
-	  this.extractqqgreedyForMethodA(val, threshold);
+		);
+		try {
+			// Get all the matrix above threshold in the SortedSet
+			// Plus a map from the objects to the cells
+			// O(n^2.log n)
+			// for classes
+			try {
+				this.extractqqgreedyForMethodA(cellSet, val, threshold);
+			} catch (AlignmentException e) {
+				e.printStackTrace();
+			}
 
-	  // for properties
-	  ConcatenatedIterator pit1 = new 
-	      ConcatenatedIterator(ontology1().getObjectProperties().iterator(),
-				   ontology1().getDataProperties().iterator());
-	 this.extractqqgreedyForMethodB(ConcatenatedIterator pit1, double val, double threshold);
+			// for properties
+			ConcatenatedIterator pit1 = new
+					ConcatenatedIterator(ontology1().getObjectProperties().iterator(),
+					ontology1().getDataProperties().iterator());
+			try {
+				this.extractqqgreedyForMethodB(cellSet, pit1, val, threshold);
+			} catch (AlignmentException e) {
+				e.printStackTrace();
+			}
 
-	  // for individuals
-		  this.extractqqgreedyIfElseMethodC(params, val, threshold);
-	  // O(n^2)
-		  this.extractqqgreedyForMethodD(cellSet);
-      } catch (AlignmentException alex) {
-	  		alex.printStackTrace();
-      } catch (OntowrapException owex) {
-	  owex.printStackTrace();
-      }
-      return((Alignment)this);
-    }
+			// for individuals
+			try {
+				this.extractqqgreedyIfElseMethodC(cellSet, params, val, threshold);
+			} catch (AlignmentException e) {
+				e.printStackTrace();
+			}
+			// O(n^2)
+			this.extractqqgreedyForMethodD(cellSet);
+		} catch (OntowrapException owex) {
+			owex.printStackTrace();
+		}
+		return((Alignment)this);
+	}
 
 	/**
 	 * New Method extractqqgreedyForMethodA()
 	 */
-	private void extractqqgreedyForMethodA(double val, double threshold){
+	private void extractqqgreedyForMethodA(SortedSet<Cell> cellSet, double val, double threshold) throws OntowrapException, AlignmentException {
 		for ( Object ent1: ontology1().getClasses() ) {
 			for ( Object ent2: ontology2().getClasses() ) {
-				this.extractqqgreedyInnerForMethodA(val, threshold, ent1, ent2);
+				this.extractqqgreedyInnerForMethodA(cellSet, val, threshold, ent1, ent2);
 			}
 		}
 	}
@@ -511,7 +521,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	/**
 	 * New Method extractqqgreedyInnerForMethodA()
 	 */
-	private void extractqqgreedyInnerForMethodA(double val, double threshold, Object ent1, Object ent2){
+	private void extractqqgreedyInnerForMethodA(SortedSet<Cell> cellSet, double val, double threshold, Object ent1, Object ent2) throws AlignmentException {
 		if ( sim.getSimilarity() ) val = sim.getClassSimilarity( ent1, ent2 );
 		else val = 1 - sim.getClassSimilarity( ent1, ent2 );
 		if ( val > threshold ){
@@ -523,13 +533,13 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	/**
 	 * New Method extractqqgreedyForMethodB()
 	 */
-	private void extractqqgreedyForMethodB(ConcatenatedIterator pit1, double val, double threshold){
+	private void extractqqgreedyForMethodB(SortedSet<Cell> cellSet, ConcatenatedIterator pit1, double val, double threshold) throws OntowrapException, AlignmentException {
 		for ( Object ent1: pit1 ) {
 			ConcatenatedIterator pit2 = new
 					ConcatenatedIterator(ontology2().getObjectProperties().iterator(),
 					ontology2().getDataProperties().iterator());
 			for ( Object ent2: pit2 ) {
-				this.extractqqgreedyInnerForMethodB(val, threshold, ent1, ent2);
+				this.extractqqgreedyInnerForMethodB(cellSet, val, threshold, ent1, ent2);
 
 			}
 		}
@@ -538,7 +548,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	/**
 	 * New Method extractqqgreedyInnerForMethodB()
 	 */
-	private void extractqqgreedyInnerForMethodB(double val, double threshold, Object ent1, Object ent2){
+	private void extractqqgreedyInnerForMethodB(SortedSet<Cell> cellSet, double val, double threshold, Object ent1, Object ent2) throws AlignmentException {
 		if ( sim.getSimilarity() ) val = sim.getPropertySimilarity( ent1, ent2 );
 		else val = 1 - sim.getPropertySimilarity( ent1, ent2 );
 		if ( val > threshold ){
@@ -549,21 +559,21 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	/**
 	 * New Method extractqqgreedyIfElseMethodC()
 	 */
-	private void extractqqgreedyIfElseMethodC(Properties params, double val, double threshold){
+	private void extractqqgreedyIfElseMethodC(SortedSet<Cell> cellSet, Properties params, double val, double threshold) throws OntowrapException, AlignmentException {
 		if (  params.getProperty("noinst") == null ){
 			for( Object ent1: ontology1().getIndividuals() ) {
-				this.extractqqgreedyInnerIfElseMethodC(ent1, val, threshold);
+				this.extractqqgreedyInnerIfElseMethodC(cellSet, ent1, val, threshold);
 			}
 		}
 	}
 
 	/**
- 	* New Method extractqqgreedyInnerIfElseMethodC()
-  	*/
-	private void extractqqgreedyInnerIfElseMethodC(Object ent1, double val, double threshold){
+	 * New Method extractqqgreedyInnerIfElseMethodC()
+	 */
+	private void extractqqgreedyInnerIfElseMethodC(SortedSet<Cell> cellSet, Object ent1, double val, double threshold) throws OntowrapException, AlignmentException {
 		if ( ontology1().getEntityURI( ent1 ) != null ) {
 			for( Object ent2: ontology2().getIndividuals() ) {
-				this.extractqqgreedyInnerIfElseMethodCInner(ent1, ent2, val, threshold);
+				this.extractqqgreedyInnerIfElseMethodCInner(cellSet, ent1, ent2, val, threshold);
 			}
 		}
 	}
@@ -571,7 +581,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 	/**
 	 * New Method extractqqgreedyInnerIfElseMethodCInner()
 	 */
-	private void extractqqgreedyInnerIfElseMethodCInner(Object ent1, Object ent2, double val, double threshold){
+	private void extractqqgreedyInnerIfElseMethodCInner(SortedSet<Cell> cellSet, Object ent1, Object ent2, double val, double threshold) throws OntowrapException, AlignmentException {
 		if ( ontology2().getEntityURI( ent2 ) != null ) {
 			if ( sim.getSimilarity() ) val = sim.getIndividualSimilarity( ent1, ent2 );
 			else val = 1 - sim.getIndividualSimilarity( ent1, ent2 );
@@ -596,7 +606,7 @@ public abstract class DistanceAlignment extends ObjectAlignment implements Align
 				}
 			}
 		} catch (AlignmentException alex) {
-		alex.printStackTrace();
+			alex.printStackTrace();
 		}
 	}
 }
