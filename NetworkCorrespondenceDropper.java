@@ -1,5 +1,5 @@
 /*
- * $Id: NetworkAlignmentWeakener.java 1659 2011-12-28 10:50:46Z euzenat $
+ * $Id: NetworkCorrespondenceDropper.java 1659 2011-12-28 10:50:46Z euzenat $
  *
  * Copyright (C) INRIA, 2009-2011
  *
@@ -28,20 +28,18 @@ import org.semanticweb.owl.align.Cell;
 import org.semanticweb.owl.align.OntologyNetwork;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Properties;
+import java.util.*;
 
 /**
- * AlignmentWeakener
+ * NetworkCorrespondenceDropper
  *
- * suppress n% of the correspondences at random in each alignments
+ * suppress n% of the correspondences at random in all alignments (globally)
  * n is a number between 0. and 1.
  * Returns a brand new BasicOntologyNetwork (with new alignments and cells)
  * the @threshold parameter tells if the corrrespondences are suppressed at random (false) of by suppressing the n% of lower confidence (true)
  */
 
-public class NetworkAlignmentWeakener implements OntologyNetworkWeakener {
+public class NetworkCorrespondenceDropper implements OntologyNetworkWeakener {
 
     public OntologyNetwork weaken( OntologyNetwork on, int n, Properties p ) throws AlignmentException {
 	throw new AlignmentException( "Cannot weaken alignments by fixed number of correspondences" );
@@ -53,8 +51,26 @@ public class NetworkAlignmentWeakener implements OntologyNetworkWeakener {
 	    throw new AlignmentException( "Argument must be between 0 and 1.: "+n );
 	boolean threshold = (p != null && p.getProperty("threshold") != null);
 	OntologyNetwork newon = new BasicOntologyNetwork();
+
 	this.weakenInnerA(on, newon);
-	this.weakenInnerB(on, n, threshold, newon);
+
+	// Put all the cell/alignment in a array
+	Collection<LCell> corresp = null;
+
+		this.weakenInnerB(threshold, corresp);
+
+
+	this.weakenInnerC(on, corresp, newon);
+
+	// Select these correspondences to delete: either shuffle or order
+	//System.err.println( n+" * "+corresp.size()+" = "+n*(double)(corresp.size()) );
+	int q = (int)(n*(double)(corresp.size()));
+	if ( !threshold ) Collections.shuffle( (ArrayList)corresp );
+	// Suppress the n*size() last ones or those which are under threshold
+
+		this.weakenInnerD(corresp, q);
+
+	// Cut
 	return newon;
     }
 
@@ -71,51 +87,71 @@ public class NetworkAlignmentWeakener implements OntologyNetworkWeakener {
 
 	/**
 	 *
-	 * @param on
-	 * @param n
 	 * @param threshold
+	 * @param corresp
+	 */
+	private void weakenInnerB(boolean threshold, Collection<LCell> corresp){
+		if ( threshold ) {
+			corresp = new TreeSet<LCell>();
+		} else {
+			corresp = new ArrayList<LCell>();
+		}
+	}
+
+	/**
+	 *
+	 * @param on
+	 * @param corresp
 	 * @param newon
 	 * @throws AlignmentException
 	 */
-	private void weakenInnerB(OntologyNetwork on, double n, boolean threshold, OntologyNetwork newon) throws AlignmentException {
-		for ( Alignment al : on.getAlignments() ){
+	private void weakenInnerC(OntologyNetwork on, Collection<LCell> corresp, OntologyNetwork newon) throws AlignmentException {
+		for ( Alignment al : on.getAlignments() ) {
 			Alignment newal = (Alignment)al.clone();
-			if ( threshold ) {
-				newal.cut( "perc", 1.-n );
-			} else {
-				this.weakenInnerBInner(newal, n);
+			for ( Cell c : newal ) {
+				corresp.add( new LCell( c, newal ) );
 			}
 			newon.addAlignment( newal );
 		}
 	}
 
 	/**
-	 * 
-	 * @param newal
-	 * @param n
+	 *
+	 * @param corresp
+	 * @param q
 	 * @throws AlignmentException
 	 */
-	private void weakenInnerBInner(Alignment newal, double n) throws AlignmentException {
-		int size = newal.nbCells();
-		// --------------------------------------------------------------------
-		// JE: Here is a tricky one.
-		// Using collection schuffle randomly reorganises a list
-		// Then choosing the fist n% and destroying them in the Set is performed
-		// The complexity is O(copy=N)+O(shuffle=N)+n%*O(delete=N)
-		// That's not bad... (and also avoid checking if the same nb is drawn)
-		// But in practice other solutions may be better, like:
-		// Generating randomly n%*N numbers between 0 and N (util.Random)
-		// Ordering them
-		// Traversing the initial structure and deleting the choosen ones...
-		// This one (deleting when traversing) is tricky in Java.
-		// --------------------------------------------------------------------
-		ArrayList<Cell> array = new ArrayList<Cell>( size );
-		for ( Cell c : newal ) {
-			array.add( c );
-		}
-		Collections.shuffle( array );
-		for ( int i = (int)(n*size)-1; i >= 0; i-- ){
-			newal.remCell( array.get( i ) );
+	private void weakenInnerD(Collection<LCell> corresp, int q) throws AlignmentException {
+		for ( LCell c : corresp ) {
+			if ( q == 0 ) break;
+			q--;
+			//System.err.println( "Cell ["+c.getCell().getStrength()+"] : "+c );
+			c.getAlignment().remCell( c.getCell() );
 		}
 	}
+
+}
+
+class LCell implements Comparable<LCell> {
+    Alignment alignment = null;
+    Cell cell = null;
+
+    LCell( Cell c, Alignment al ) {
+	alignment = al;
+	cell = c;
+    }
+
+    /**
+     * This is not the standard required definition of compareTo
+     * But this is the one which works exactly here (we want the structure ordered, 
+     * we do not want that two cells be equated (in case of 0)
+     */
+    public int compareTo( LCell c ) {
+	if ( cell.getStrength() > c.getCell().getStrength() ) return 1;
+	else return -1;/*if ( cell.getStrength() < c.getCell().getStrength() ) return -1;
+			 else return 0;*/
+    }
+
+    Alignment getAlignment() { return alignment; }
+    Cell getCell() { return cell; }
 }
