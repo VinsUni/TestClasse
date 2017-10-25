@@ -296,17 +296,7 @@ public class GroupAlign {
 		System.err.println("Cannot create alignment "+ alignmentClassName+ "\n"+ ex.getMessage());
 		throw ex;
 	    }
-
-	    if (debug > 1) System.err.println(" Alignment structure created");
-
-	    // Compute alignment
-	    long time = System.currentTimeMillis();
-	    result.align(init, params); // add opts
-	    long newTime = System.currentTimeMillis();
-	    result.setExtension( Namespace.ALIGNMENT.uri, Annotations.TIME, Long.toString(newTime - time) );
-	    
-	    if (debug > 1) System.err.println(" Alignment performed");
-	    
+	    this.alignIFMethodE(result, init);
 	    // Set output file
 	    writer = new PrintWriter (
                          new BufferedWriter(
@@ -325,13 +315,14 @@ public class GroupAlign {
 		throw ex;
 	    }
 
-	    if (debug > 1) System.err.println(" Outputing result to "+dir+File.separator+filename+".rdf");
-	    // Output
-	    result.render( renderer);
+	    this.alignIFMethodF(renderer, dir, result);
 
-	    if (debug > 1) System.err.println(" Done..."+renderer+"\n");
-	} catch (Exception ex) { 
-	    if ( debug > 1 ) ex.printStackTrace(); 
+
+	} catch (Exception ex) {
+
+		this.alignIFMethodG(ex);
+
+
 	} finally {
 	    // JE: This instruction is very important
 	    if ( writer != null ) writer.close();
@@ -339,6 +330,51 @@ public class GroupAlign {
 	    try { OntologyFactory.clear(); } catch (Exception e) {};
 	}
     }
+
+	/**
+	 *
+	 * @param result
+	 * @param init
+	 */
+	private void alignIFMethodE(AlignmentProcess result, Alignment init) {
+		if (debug > 1) System.err.println(" Alignment structure created");
+
+		// Compute alignment
+		long time = System.currentTimeMillis();
+		try {
+			result.align(init, params); // add opts
+		} catch (AlignmentException e) {
+			e.printStackTrace();
+		}
+		long newTime = System.currentTimeMillis();
+		result.setExtension( Namespace.ALIGNMENT.uri, Annotations.TIME, Long.toString(newTime - time) );
+		if (debug > 1) System.err.println(" Alignment performed");
+	}
+
+	/**
+	 *
+	 * @param renderer
+	 * @param dir
+	 * @param result
+	 */
+	private void alignIFMethodF(AlignmentVisitor renderer, File dir, AlignmentProcess result) {
+		if (debug > 1) System.err.println(" Outputing result to "+dir+File.separator+filename+".rdf");
+		// Output
+		try {
+			result.render( renderer);
+		} catch (AlignmentException e) {
+			e.printStackTrace();
+		}
+		if (debug > 1) System.err.println(" Done..."+renderer+"\n");
+	}
+
+	/**
+	 *
+	 * @param ex
+	 */
+	private void alignIFMethodG(Exception ex){
+		if ( debug > 1 ) ex.printStackTrace();
+	}
 
 	/**
 	 *
