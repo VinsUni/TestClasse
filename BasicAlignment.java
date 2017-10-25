@@ -323,7 +323,7 @@ public class BasicAlignment implements Alignment {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param s2
 	 * @param found
 	 * @param c
@@ -502,40 +502,94 @@ public class BasicAlignment implements Alignment {
 	int size = buffer.size();
 	int i = 0; // the number of cells to keep
 	// Depending on the method, find the limit
-	if ( method.equals("perc") ){
-	    i = (new Double(size*threshold)).intValue();
-	} else if ( method.equals("best") ){
-	    i = java.lang.Math.min( size, new Double(threshold*100).intValue() );
-	} else if ( method.equals("hardgap") || method.equals("propgap") ){
-	    double gap;
-	    double last = buffer.get(0).getStrength();
-	    if ( method.equals("propgap") ) gap = last * threshold;
-	    else gap = threshold;
-	    for( i=1; i < size ; i++ ) {
-		if ( last - buffer.get(i).getStrength() > gap ) break;
-		else {
-		    last = buffer.get(i).getStrength();
-		    if ( method.equals("propgap") ) gap = last * threshold;
-		}
-	    }
-	} else {
-	    double max;
-	    if ( method.equals("hard") ) max = threshold;
-	    else if ( method.equals("span") ) max = buffer.get(0).getStrength() - threshold;
-	    else if ( method.equals("prop") ) max = buffer.get(0).getStrength() * threshold;
-	    else throw new AlignmentException( "Not a cut specification : "+method );
-	    for( i=0; i < size ; i++) {
-		if ( buffer.get(i).getStrength() < max ) break;
-	    }
-	}
+		this.cutInnerA(method, threshold, i, size, buffer);
 	// Introduce the result back in the structure
 	size = i;
 	hash1.clear();
 	hash2.clear();
-	for( i=0; i < size; i++ ) {
-	    addCell( buffer.get(i) );
+	this.cutInnerB(size, buffer, i );
+    }
+
+	/**
+	 *
+	 * @param method
+	 * @param threshold
+	 * @param i
+	 * @param size
+	 * @param buffer
+	 * @throws AlignmentException
+	 */
+    private void cutInnerA(String method, double threshold, int i, int size, List<Cell> buffer ) throws AlignmentException {
+		if ( method.equals("perc") ){
+			i = (new Double(size*threshold)).intValue();
+		} else if ( method.equals("best") ){
+			i = java.lang.Math.min( size, new Double(threshold*100).intValue() );
+		} else if ( method.equals("hardgap") || method.equals("propgap") ){
+			double gap = 0;
+			double last = buffer.get(0).getStrength();
+			this.cutInnerAInnerA(method, gap, last, threshold, buffer, i, size);
+		} else {
+			double max =0;
+
+			this.cutInnerAInnerB(method, max, threshold, buffer, i, size);
+
+		}
 	}
-    };
+
+	/**
+	 *
+	 * @param method
+	 * @param gap
+	 * @param last
+	 * @param threshold
+	 * @param buffer
+	 * @param i
+	 * @param size
+	 */
+	private void cutInnerAInnerA(String method, double gap, double last, double threshold, List<Cell> buffer, int i, int size){
+		if ( method.equals("propgap") ) gap = last * threshold;
+		else gap = threshold;
+		for( i=1; i < size ; i++ ) {
+			if ( last - buffer.get(i).getStrength() > gap ) break;
+			else {
+				last = buffer.get(i).getStrength();
+				if ( method.equals("propgap") ) gap = last * threshold;
+			}
+		}
+	}
+
+	/**
+	 * 
+	 * @param method
+	 * @param max
+	 * @param threshold
+	 * @param buffer
+	 * @param i
+	 * @param size
+	 * @throws AlignmentException
+	 */
+	private void cutInnerAInnerB(String method, double max, double threshold, List<Cell> buffer, int i, int size) throws AlignmentException {
+		if ( method.equals("hard") ) max = threshold;
+		else if ( method.equals("span") ) max = buffer.get(0).getStrength() - threshold;
+		else if ( method.equals("prop") ) max = buffer.get(0).getStrength() * threshold;
+		else throw new AlignmentException( "Not a cut specification : "+method );
+		for( i=0; i < size ; i++) {
+			if ( buffer.get(i).getStrength() < max ) break;
+		}
+	}
+
+	/**
+	 *
+	 * @param size
+	 * @param buffer
+	 * @param i
+	 * @throws AlignmentException
+	 */
+	private void cutInnerB(int size, List<Cell> buffer, int i) throws AlignmentException {
+		for( i=0; i < size; i++ ) {
+			addCell( buffer.get(i) );
+		}
+	}
 
     /**
      * Returns default exception for conversion to URIAlignments
