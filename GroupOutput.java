@@ -410,44 +410,13 @@ public class GroupOutput {
 	output.println("\\begin{tikzpicture}");
 
 	output.println("\\begin{scope}[minimum size=1cm]");
-	if ( labels ) {
-	    output.println("\\draw (-.5,2.) node[anchor=east] {labels};");
-	    output.println("\\draw (2.5,0.) node[anchor=west] {hierarchy};");
-	    output.println("\\draw (-.5,0.) node[anchor=east] {properties};");
-	    output.println("\\draw (2.5,2.0) node[anchor=west] {instances};");
-	}
-
+		this.printPGFTeXInnerA();
 	output.println("\\draw (0,2.) node[diamond"+colorFormat(cells[11])+"] {}; % l");
-	if (value) output.println("\\draw (0,2.) node {"+stringFormat(cells[11])+"}; % l");
-	output.println("\\draw (0,1.) node[diamond"+colorFormat(cells[5])+"] {}; % lp");
-	if (value) output.println("\\draw (0,1.) node {"+stringFormat(cells[5])+"}; % lp");
-	output.println("\\draw (0.5,1.5) node[diamond"+colorFormat(cells[2])+"] {}; % lip");
-	if (value) output.println("\\draw (0.5,1.5) node {"+stringFormat(cells[2])+"}; % lip");
-	output.println("\\draw (1.,2.) node[diamond"+colorFormat(cells[6])+"] {}; %li");
-	if (value) output.println("\\draw (1.,2.) node {"+stringFormat(cells[6])+"}; %li");
-	output.println("\\draw (-0.5,-0.5) node[diamond"+colorFormat(cells[9])+"] {}; % ip");
-	if (value) output.println("\\draw (-0.5,-0.5) node {"+stringFormat(cells[9])+"}; % ip");
-	output.println("\\draw (0,0) node[diamond"+colorFormat(cells[12])+"] {}; %p");
-	if (value) output.println("\\draw (0,0) node {"+stringFormat(cells[12])+"}; %p");
-	output.println("\\draw (.5,.5) node[diamond"+colorFormat(cells[3])+"] {}; % lph");
-	if (value) output.println("\\draw (.5,.5) node {"+stringFormat(cells[3])+"}; % lph");
-	output.println("\\draw (1.,1.) node[diamond"+colorFormat(cells[0])+"] {}; % liph");
-	if (value) output.println("\\draw (1.,1.) node {"+stringFormat(cells[0])+"}; % liph");
-	output.println("\\draw (1.5,1.5) node[diamond"+colorFormat(cells[4])+"] {}; %hil");
-	if (value) output.println("\\draw (1.5,1.5) node {"+stringFormat(cells[4])+"}; %hil");
-	output.println("\\draw (2.,2.) node[diamond"+colorFormat(cells[14])+"] {}; %i");
-	if (value) output.println("\\draw (2.,2.) node {"+stringFormat(cells[14])+"}; %i");
-	output.println("\\draw (2.,1.) node[diamond"+colorFormat(cells[10])+"] {}; % hi");
-	if (value) output.println("\\draw (2.,1.) node {"+stringFormat(cells[10])+"}; % hi");
-	output.println("\\draw (1.5,0.5) node[diamond"+colorFormat(cells[1])+"] {}; % phi");
-	if (value) output.println("\\draw (1.5,0.5) node {"+stringFormat(cells[1])+"}; % phi");
-	output.println("\\draw (1.,0) node[diamond"+colorFormat(cells[8])+"] {}; % ph");
-	if (value) output.println("\\draw (1.,0) node {"+stringFormat(cells[8])+"}; % ph");
-	output.println("\\draw (2.,0) node[diamond"+colorFormat(cells[13])+"] {}; % h");
-	if (value) output.println("\\draw (2.,0) node {"+stringFormat(cells[13])+"}; % h");
-	output.println("\\draw (2.5,-0.5) node[diamond"+colorFormat(cells[7])+"] {}; % hl");
-	if (value) output.println("\\draw (2.5,-0.5) node {"+stringFormat(cells[7])+"}; % hl");
-
+		this.printPGFTeXInnerB(cells);
+		this.printPGFTeXInnerC(cells);
+		this.printPGFTeXInnerD(cells);
+		this.printPGFTeXInnerE(cells);
+		this.printPGFTeXInnerF(cells);
 	output.println("\\end{scope}");
 
 	output.println("\\end{tikzpicture} ");
@@ -455,6 +424,59 @@ public class GroupOutput {
 	output.println("\\end{center}");
 	output.println("\\end{figure}");
     }
+
+    private void printPGFTeXInnerA(){
+		if ( labels ) {
+			output.println("\\draw (-.5,2.) node[anchor=east] {labels};");
+			output.println("\\draw (2.5,0.) node[anchor=west] {hierarchy};");
+			output.println("\\draw (-.5,0.) node[anchor=east] {properties};");
+			output.println("\\draw (2.5,2.0) node[anchor=west] {instances};");
+		}
+	}
+
+	private void printPGFTeXInnerB(double[] cells){
+		if (value) output.println("\\draw (0,2.) node {"+stringFormat(cells[11])+"}; % l");
+		output.println("\\draw (0,1.) node[diamond"+colorFormat(cells[5])+"] {}; % lp");
+		if (value) output.println("\\draw (0,1.) node {"+stringFormat(cells[5])+"}; % lp");
+		output.println("\\draw (0.5,1.5) node[diamond"+colorFormat(cells[2])+"] {}; % lip");
+		if (value) output.println("\\draw (0.5,1.5) node {"+stringFormat(cells[2])+"}; % lip");
+		output.println("\\draw (1.,2.) node[diamond"+colorFormat(cells[6])+"] {}; %li");
+	}
+
+	private void printPGFTeXInnerC(double[] cells){
+		if (value) output.println("\\draw (1.,2.) node {"+stringFormat(cells[6])+"}; %li");
+		output.println("\\draw (-0.5,-0.5) node[diamond"+colorFormat(cells[9])+"] {}; % ip");
+		if (value) output.println("\\draw (-0.5,-0.5) node {"+stringFormat(cells[9])+"}; % ip");
+		output.println("\\draw (0,0) node[diamond"+colorFormat(cells[12])+"] {}; %p");
+		if (value) output.println("\\draw (0,0) node {"+stringFormat(cells[12])+"}; %p");
+		output.println("\\draw (.5,.5) node[diamond"+colorFormat(cells[3])+"] {}; % lph");
+	}
+
+	private void printPGFTeXInnerD(double[] cells){
+		if (value) output.println("\\draw (.5,.5) node {"+stringFormat(cells[3])+"}; % lph");
+		output.println("\\draw (1.,1.) node[diamond"+colorFormat(cells[0])+"] {}; % liph");
+		if (value) output.println("\\draw (1.,1.) node {"+stringFormat(cells[0])+"}; % liph");
+		output.println("\\draw (1.5,1.5) node[diamond"+colorFormat(cells[4])+"] {}; %hil");
+		if (value) output.println("\\draw (1.5,1.5) node {"+stringFormat(cells[4])+"}; %hil");
+		output.println("\\draw (2.,2.) node[diamond"+colorFormat(cells[14])+"] {}; %i");
+	}
+
+	private void printPGFTeXInnerE(double[] cells){
+		if (value) output.println("\\draw (2.,2.) node {"+stringFormat(cells[14])+"}; %i");
+		output.println("\\draw (2.,1.) node[diamond"+colorFormat(cells[10])+"] {}; % hi");
+		if (value) output.println("\\draw (2.,1.) node {"+stringFormat(cells[10])+"}; % hi");
+		output.println("\\draw (1.5,0.5) node[diamond"+colorFormat(cells[1])+"] {}; % phi");
+		if (value) output.println("\\draw (1.5,0.5) node {"+stringFormat(cells[1])+"}; % phi");
+		output.println("\\draw (1.,0) node[diamond"+colorFormat(cells[8])+"] {}; % ph");
+	}
+
+	private void printPGFTeXInnerF(double[] cells){
+		if (value) output.println("\\draw (1.,0) node {"+stringFormat(cells[8])+"}; % ph");
+		output.println("\\draw (2.,0) node[diamond"+colorFormat(cells[13])+"] {}; % h");
+		if (value) output.println("\\draw (2.,0) node {"+stringFormat(cells[13])+"}; % h");
+		output.println("\\draw (2.5,-0.5) node[diamond"+colorFormat(cells[7])+"] {}; % hl");
+		if (value) output.println("\\draw (2.5,-0.5) node {"+stringFormat(cells[7])+"}; % hl");
+	}
 
     public void printTSV( double[][] result ) {
     }
