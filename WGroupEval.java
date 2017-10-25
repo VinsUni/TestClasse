@@ -35,6 +35,7 @@ import fr.inrialpes.exmo.ontowrap.OntologyFactory;
 import fr.inrialpes.exmo.ontowrap.OntowrapException;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.io.FileOutputStream;
 import java.lang.Integer;
@@ -461,110 +462,33 @@ which the program does...
 	// JE: the h-means computation should be put out as well
 	try {
 	    // Print result
-	    if ( filename == null ) {
-		writer = System.out;
-	    } else {
-		writer = new PrintStream(new FileOutputStream( filename ));
-	    }
+
+		this.printHTMLInnerA(writer);
+
+
 	    Formatter formatter = new Formatter(writer);
 
 	    // Print the header
-	    if ( embedded != true ) writer.println("<html><head></head><body>");
-	    writer.println("<table border='2' frame='sides' rules='groups'>");
-	    writer.println("<colgroup align='center' />");
-	    // for each algo <td spancol='2'>name</td>
-	    for ( String m : listAlgo ) {
-		writer.println("<colgroup align='center' span='"+fsize+"' />");
-	    }
-	    // For each file do a
-	    writer.println("<thead valign='top'><tr><th>algo</th>");
-	    // for each algo <td spancol='2'>name</td>
-	    for ( String m : listAlgo ) {
-		writer.println("<th colspan='"+fsize+"'>"+m+"</th>");
-	    }
+
+		this.printHTMLInnerB(writer);
+
+
 	    writer.println("</tr></thead><tbody><tr><td>test</td>");
 	    // for each algo <td>Prec.</td><td>Rec.</td>
-	    for ( String m : listAlgo ) {
-		for ( int i = 0; i < fsize; i++){
-		    writer.print("<td>");
-		    if ( format.charAt(i) == 'p' ) {
-			writer.print("Prec.");
-		    } else if ( format.charAt(i) == 'f' ) {
-			writer.print("FMeas.");
-		    } else if ( format.charAt(i) == 'o' ) {
-			writer.print("Over.");
-		    } else if ( format.charAt(i) == 't' ) {
-			writer.print("Time");
-		    } else if ( format.charAt(i) == 'r' ) {
-			writer.print("Rec.");
-		    }
-		    writer.println("</td>");
-		}
-		//writer.println("<td>Prec.</td><td>Rec.</td>");
-	    }
+
+		this.printHTMLInnerC(writer);
+
 	    writer.println("</tr></tbody><tbody>");
 	    foundVect = new int[ listAlgo.size() ];
 	    correctVect = new int[ listAlgo.size() ];
 	    timeVect = new long[ listAlgo.size() ];
-	    for( int k = listAlgo.size()-1; k >= 0; k-- ) {
-		foundVect[k] = 0;
-		correctVect[k] = 0;
-		timeVect[k] = 0;
-	    }
+	    this.printHTMLInnerD(foundVect, correctVect, timeVect);
 	    // </tr>
 	    // For each directory <tr>
 	    boolean colored = false;
-	    for ( Vector test : result ) {
-		int nexpected = -1;
-		if ( colored == true && color != null ){
-		    colored = false;
-		    writer.println("<tr bgcolor=\""+color+"\">");
-		} else {
-		    colored = true;
-		    writer.println("<tr>");
-		};
-		// Print the directory <td>bla</td>
-		writer.println("<td>"+(String)test.get(0)+"</td>");
-		// For each record print the values <td>bla</td>
-		Enumeration f = test.elements();
-		f.nextElement();
-		for( int k = 0 ; f.hasMoreElements() ; k++) {
-		    WeightedPREvaluator eval = (WeightedPREvaluator)f.nextElement();
-		    if ( eval != null ){
-			// iterative H-means computation
-			if ( nexpected == -1 ){
-			    expected += eval.getExpected();
-			    nexpected = 0;
-			}
-			foundVect[k] += eval.getFound();
-			correctVect[k] += eval.getCorrect();
-			timeVect[k] += eval.getTime();
 
-			for ( int i = 0 ; i < fsize; i++){
-			    writer.print("<td>");
-			    if ( format.charAt(i) == 'p' ) {
-				formatter.format("%1.2f", eval.getPrecision());
-			    } else if ( format.charAt(i) == 'f' ) {
-				formatter.format("%1.2f", eval.getFmeasure());
-			    } else if ( format.charAt(i) == 'o' ) {
-				formatter.format("%1.2f", eval.getOverall());
-			    } else if ( format.charAt(i) == 't' ) {
-				if ( eval.getTime() == 0 ){
-				    writer.print("-");
-				} else {
-				    formatter.format("%1.2f", eval.getTime());
-				}
-			    } else if ( format.charAt(i) == 'r' ) {
-				formatter.format("%1.2f", eval.getRecall());
-			    }
-			    writer.println("</td>");
-			}
-		    } else {
-			writer.println("<td>n/a</td><td>n/a</td>");
-		    }
-		}
-		writer.println("</tr>");
-	    }
+		this.printHTMLInnerE(result, writer, colored, expected, foundVect, correctVect, timeVect, formatter);
+
 	    writer.print("<tr bgcolor=\"yellow\"><td>H-mean</td>");
 	    // Here we are computing a sheer average.
 	    // While in the column results we print NaN when the returned
@@ -573,30 +497,8 @@ which the program does...
 	    // foundVect, so this is OK for computing the average.
 	    int k = 0;
 	    // ???
-	    for ( String m : listAlgo ) {
-		double precision = (double)correctVect[k]/foundVect[k];
-		double recall = (double)correctVect[k]/expected;
-		for ( int i = 0 ; i < fsize; i++){
-		    writer.print("<td>");
-		    if ( format.charAt(i) == 'p' ) {
-			formatter.format("%1.2f", precision);
-		    } else if ( format.charAt(i) == 'f' ) {
-			formatter.format("%1.2f", 2 * precision * recall / (precision + recall));
-		    } else if ( format.charAt(i) == 'o' ) {
-			formatter.format("%1.2f", recall * (2 - (1 / precision)));
-		    } else if ( format.charAt(i) == 't' ) {
-			if ( timeVect[k] == 0 ){
-			    writer.print("-");
-			} else {
-			    formatter.format("%1.2f", timeVect[k]);
-			}
-		    } else if ( format.charAt(i) == 'r' ) {
-			formatter.format("%1.2f", recall);
-		    }
-		    writer.println("</td>");
-		};
-		k++;
-	    }
+
+		this.printHTMLInnerF(foundVect,correctVect, timeVect, writer, formatter, k, expected);
 	    writer.println("</tr>");
 	    writer.println("</tbody></table>");
 	    writer.println("<p><small>n/a: result alignment not provided or not readable<br />");
@@ -608,6 +510,289 @@ which the program does...
 	    writer.close();
 	}
     }
+
+	/**
+	 *
+	 * @param writer
+	 * @throws FileNotFoundException
+	 */
+	private void printHTMLInnerA(PrintStream writer) throws FileNotFoundException {
+		if ( filename == null ) {
+			writer = System.out;
+		} else {
+			writer = new PrintStream(new FileOutputStream( filename ));
+		}
+	}
+
+	/**
+	 *
+	 * @param writer
+	 */
+	private void printHTMLInnerB(PrintStream writer){
+		if ( embedded != true ) writer.println("<html><head></head><body>");
+		writer.println("<table border='2' frame='sides' rules='groups'>");
+		writer.println("<colgroup align='center' />");
+		// for each algo <td spancol='2'>name</td>
+		for ( String m : listAlgo ) {
+			writer.println("<colgroup align='center' span='"+fsize+"' />");
+		}
+		// For each file do a
+		writer.println("<thead valign='top'><tr><th>algo</th>");
+		// for each algo <td spancol='2'>name</td>
+		for ( String m : listAlgo ) {
+			writer.println("<th colspan='"+fsize+"'>"+m+"</th>");
+		}
+	}
+
+	/**
+	 *
+	 * @param writer
+	 */
+	private void printHTMLInnerC(PrintStream writer){
+		for ( String m : listAlgo ) {
+			for ( int i = 0; i < fsize; i++){
+				writer.print("<td>");
+				this.printHTMLInnerCInnerA(writer, i);
+				writer.println("</td>");
+			}
+			//writer.println("<td>Prec.</td><td>Rec.</td>");
+		}
+	}
+
+	/**
+	 *
+	 * @param writer
+	 * @param i
+	 */
+	private void printHTMLInnerCInnerA(PrintStream writer, int i){
+		if ( format.charAt(i) == 'p' ) {
+			writer.print("Prec.");
+		} else if ( format.charAt(i) == 'f' ) {
+			writer.print("FMeas.");
+		} else{
+			this.printHTMLInnerCInnerB(writer, i);
+		}
+	}
+
+	/**
+	 *
+	 * @param writer
+	 * @param i
+	 */
+	private void printHTMLInnerCInnerB(PrintStream writer, int i){
+		if ( format.charAt(i) == 'o' ) {
+			writer.print("Over.");
+		} else if ( format.charAt(i) == 't' ) {
+			writer.print("Time");
+		} else if ( format.charAt(i) == 'r' ) {
+			writer.print("Rec.");
+		}
+	}
+
+	/**
+	 *
+	 * @param foundVect
+	 * @param correctVect
+	 * @param timeVect
+	 */
+	private void printHTMLInnerD(int[] foundVect, int[] correctVect, long[] timeVect){
+		for( int k = listAlgo.size()-1; k >= 0; k-- ) {
+			foundVect[k] = 0;
+			correctVect[k] = 0;
+			timeVect[k] = 0;
+		}
+	}
+
+	/**
+	 *
+	 * @param result
+	 * @param writer
+	 * @param colored
+	 * @param expected
+	 * @param foundVect
+	 * @param correctVect
+	 * @param timeVect
+	 * @param formatter
+	 */
+	private void printHTMLInnerE(Vector<Vector> result, PrintStream writer, boolean colored, int expected, int[] foundVect, int[] correctVect, long[] timeVect, Formatter formatter ){
+		for ( Vector test : result ) {
+			int nexpected = -1;
+			this.printHTMLInnerEInnerA(colored, writer);
+			// Print the directory <td>bla</td>
+			writer.println("<td>"+(String)test.get(0)+"</td>");
+			// For each record print the values <td>bla</td>
+			Enumeration f = test.elements();
+			f.nextElement();
+			for( int k = 0 ; f.hasMoreElements() ; k++) {
+				WeightedPREvaluator eval = (WeightedPREvaluator)f.nextElement();
+				this.printHTMLInnerEInnerB(k, eval, nexpected, expected, foundVect, correctVect, timeVect, writer, formatter);
+			}
+			writer.println("</tr>");
+		}
+	}
+
+	/**
+	 *
+	 * @param colored
+	 * @param writer
+	 */
+	private void printHTMLInnerEInnerA(boolean colored, PrintStream writer){
+		if ( colored == true && color != null ){
+			colored = false;
+			writer.println("<tr bgcolor=\""+color+"\">");
+		} else {
+			colored = true;
+			writer.println("<tr>");
+		}
+	}
+
+	/**
+	 *
+	 * @param k
+	 * @param eval
+	 * @param nexpected
+	 * @param expected
+	 * @param foundVect
+	 * @param correctVect
+	 * @param timeVect
+	 * @param writer
+	 * @param formatter
+	 */
+	private void printHTMLInnerEInnerB(int k, WeightedPREvaluator eval, int nexpected, int expected, int[] foundVect, int[] correctVect, long[] timeVect, PrintStream writer, Formatter formatter){
+		if ( eval != null ){
+			// iterative H-means computation
+			if ( nexpected == -1 ){
+				expected += eval.getExpected();
+				nexpected = 0;
+			}
+			foundVect[k] += eval.getFound();
+			correctVect[k] += eval.getCorrect();
+			timeVect[k] += eval.getTime();
+
+			this.printHTMLInnerEInnerBInner(writer, formatter, eval);
+
+		} else {
+			writer.println("<td>n/a</td><td>n/a</td>");
+		}
+	}
+
+	/**
+	 *
+	 * @param writer
+	 * @param formatter
+	 * @param eval
+	 */
+	private void printHTMLInnerEInnerBInner(PrintStream writer, Formatter formatter, WeightedPREvaluator eval ){
+		for ( int i = 0 ; i < fsize; i++){
+			writer.print("<td>");
+			this.printHTMLInnerEInnerBInnerA(formatter, i, eval, writer);
+			writer.println("</td>");
+		}
+	}
+
+	/**
+	 *
+	 * @param formatter
+	 * @param i
+	 * @param eval
+	 * @param writer
+	 */
+	private void printHTMLInnerEInnerBInnerA(Formatter formatter, int i, WeightedPREvaluator eval, PrintStream writer){
+		if ( format.charAt(i) == 'p' ) {
+			formatter.format("%1.2f", eval.getPrecision());
+		} else if ( format.charAt(i) == 'f' ) {
+			formatter.format("%1.2f", eval.getFmeasure());
+		} else if ( format.charAt(i) == 'o' ) {
+			formatter.format("%1.2f", eval.getOverall());
+		} else{
+			this.printHTMLInnerEInnerBInnerB(formatter,i, eval, writer);
+		}
+	}
+
+	/**
+	 *
+	 * @param formatter
+	 * @param i
+	 * @param eval
+	 * @param writer
+	 */
+	private void printHTMLInnerEInnerBInnerB(Formatter formatter, int i, WeightedPREvaluator eval, PrintStream writer){
+		if ( format.charAt(i) == 't' ) {
+			if ( eval.getTime() == 0 ){
+				writer.print("-");
+			} else {
+				formatter.format("%1.2f", eval.getTime());
+			}
+		} else if ( format.charAt(i) == 'r' ) {
+			formatter.format("%1.2f", eval.getRecall());
+		}
+	}
+
+	/**
+	 *
+	 * @param foundVect
+	 * @param correctVect
+	 * @param timeVect
+	 * @param writer
+	 * @param formatter
+	 * @param k
+	 * @param expected
+	 */
+	private void printHTMLInnerF(int[] foundVect, int[] correctVect, long[] timeVect, PrintStream writer, Formatter formatter, int k, int expected){
+		for ( String m : listAlgo ) {
+			double precision = (double)correctVect[k]/foundVect[k];
+			double recall = (double)correctVect[k]/expected;
+			for ( int i = 0 ; i < fsize; i++){
+				writer.print("<td>");
+				this.printHTMLInnerFInnerA(i, formatter, precision, recall, timeVect, k, writer);
+				writer.println("</td>");
+			}
+			k++;
+		}
+	}
+
+	/**
+	 *
+	 * @param i
+	 * @param formatter
+	 * @param precision
+	 * @param recall
+	 * @param timeVect
+	 * @param k
+	 * @param writer
+	 */
+	private void printHTMLInnerFInnerA(int i, Formatter formatter, double precision, double recall, long[] timeVect, int k, PrintStream writer){
+		if ( format.charAt(i) == 'p' ) {
+			formatter.format("%1.2f", precision);
+		} else if ( format.charAt(i) == 'f' ) {
+			formatter.format("%1.2f", 2 * precision * recall / (precision + recall));
+		} else if ( format.charAt(i) == 'o' ) {
+			formatter.format("%1.2f", recall * (2 - (1 / precision)));
+		} else{
+			this.printHTMLInnerFInnerB(i,formatter,timeVect, k, recall, writer );
+		}
+	}
+
+	/**
+	 *
+	 * @param i
+	 * @param formatter
+	 * @param timeVect
+	 * @param k
+	 * @param recall
+	 * @param writer
+	 */
+	private void printHTMLInnerFInnerB(int i, Formatter formatter, long[] timeVect, int k, double recall, PrintStream writer){
+		if ( format.charAt(i) == 't' ) {
+			if ( timeVect[k] == 0 ){
+				writer.print("-");
+			} else {
+				formatter.format("%1.2f", timeVect[k]);
+			}
+		} else if ( format.charAt(i) == 'r' ) {
+			formatter.format("%1.2f", recall);
+		}
+	}
 
     public void usage() {
 	System.out.println("usage: WGroupEval [options]");
