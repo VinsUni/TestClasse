@@ -168,14 +168,6 @@ public class GroupAlign {
 		/* Use the given file as a partial alignment */
 				initName = g.getOptarg();
 				break;
-			case 'u' :
-		/* Use the given url prefix for fetching the ontologies */
-				urlprefix = g.getOptarg();
-				break;
-		//	case 's' :
-		/* Use the given filename for source ontology */
-		//		source = g.getOptarg();
-		//		break;
 		//	case 't' :
 		/* Use the given filename for target ontology */
 		//		target = g.getOptarg();
@@ -198,6 +190,7 @@ public class GroupAlign {
 				break;
 		}
 	}
+
 
 	/**
 	 *
