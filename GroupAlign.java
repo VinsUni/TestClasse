@@ -28,6 +28,7 @@ package fr.inrialpes.exmo.align.cli;
 
 import com.sun.org.apache.xalan.internal.xsltc.cmdline.getopt.GetOpt;
 import org.semanticweb.owl.align.Alignment;
+import org.semanticweb.owl.align.AlignmentException;
 import org.semanticweb.owl.align.AlignmentProcess;
 import org.semanticweb.owl.align.AlignmentVisitor;
 
@@ -41,6 +42,7 @@ import java.io.*;
 import java.net.URI;
 import java.lang.Integer;
 import java.lang.Long;
+import java.net.URISyntaxException;
 import java.util.Properties;
 
 import gnu.getopt.LongOpt;
@@ -270,39 +272,17 @@ public class GroupAlign {
 	Alignment init = null;
 	PrintWriter writer = null;
 
-	if ( urlprefix != null ){
-	    prefix = urlprefix+"/"+dir.getName()+"/";
-	} else {
-	    // sounds like the only way to have something portable
-	    // This is the modification for acomodating the HCONE 
-	    prefix = dir.toURI().toString();
-	    // The problem is that is brings
-	    // file:/localpath
-	    // instead of
-	    // file://localhost/localpath
-	    // Apparently should be file:///c:/localpath
-	}
+	this.alignIFMethodA(dir, prefix);
+
 	//System.err.println("Here it is "+prefix+" (end by /?)");
 
 	try {
-	    if ( !source.equalsIgnoreCase("onto1.rdf") 
-		 && !target.equalsIgnoreCase("onto1.rdf") ) {
-		uri1 = new URI(prefix+source);
-	    } else if ( uri1 == null ) uri1 = new URI(prefix+source);
+		this.alignIFMethodB(dir, prefix);
 	    URI uri2 = new URI(prefix+target);
-
-	    if (debug > 1) System.err.println(" Handler set");
-	    if (debug > 1) System.err.println(" URI1: "+uri1);
-	    if (debug > 1) System.err.println(" URI2: "+uri2);
-	    
+	    this.alignIFMethodC(uri2);
 	    try {
-		if (initName != null) {
-		    AlignmentParser aparser = new AlignmentParser(debug-1);
-		    init = aparser.parse( initName );
-		    uri1 = init.getFile1();
-		    uri2 = init.getFile2();
-		    if (debug > 1) System.err.println(" Init parsed");
-		}
+	    	this.alignIFMethodD(init, uri2);
+
 
 		// Create alignment object
 		Object[] mparams = {};
@@ -359,6 +339,67 @@ public class GroupAlign {
 	    try { OntologyFactory.clear(); } catch (Exception e) {};
 	}
     }
+
+	/**
+	 *
+	 * @param dir
+	 * @param prefix
+	 */
+	private void alignIFMethodA(File dir, String prefix){
+		if ( urlprefix != null ){
+			prefix = urlprefix+"/"+dir.getName()+"/";
+		} else {
+			// sounds like the only way to have something portable
+			// This is the modification for acomodating the HCONE
+			prefix = dir.toURI().toString();
+			// The problem is that is brings
+			// file:/localpath
+			// instead of
+			// file://localhost/localpath
+			// Apparently should be file:///c:/localpath
+		}
+	}
+
+	/**
+	 *
+	 * @param dir
+	 * @param prefix
+	 * @throws URISyntaxException
+	 */
+	private void alignIFMethodB(File dir, String prefix) throws URISyntaxException {
+		if ( !source.equalsIgnoreCase("onto1.rdf")
+				&& !target.equalsIgnoreCase("onto1.rdf") ) {
+			uri1 = new URI(prefix+source);
+		} else if ( uri1 == null ) uri1 = new URI(prefix+source);
+	}
+
+	/**
+	 *
+	 * @param uri2
+	 */
+	private void alignIFMethodC(URI uri2){
+		if (debug > 1) System.err.println(" Handler set");
+		if (debug > 1) System.err.println(" URI1: "+uri1);
+		if (debug > 1) System.err.println(" URI2: "+uri2);
+	}
+
+	/**
+	 *
+	 * @param init
+	 * @param uri2
+	 * @throws AlignmentException
+	 */
+	private void alignIFMethodD(Alignment init, URI uri2) throws AlignmentException {
+		if (initName != null) {
+			AlignmentParser aparser = new AlignmentParser(debug-1);
+			init = aparser.parse( initName );
+			uri1 = init.getFile1();
+			uri2 = init.getFile2();
+			if (debug > 1) System.err.println(" Init parsed");
+		}
+	}
+
+
 
     public void usage() {
 	System.err.println("usage: GroupAlign [options]");
