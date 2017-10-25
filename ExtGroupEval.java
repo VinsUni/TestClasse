@@ -40,6 +40,7 @@ import fr.inrialpes.exmo.ontowrap.OntologyFactory;
 import fr.inrialpes.exmo.ontowrap.OntowrapException;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.io.FileOutputStream;
 import java.lang.Integer;
@@ -322,148 +323,38 @@ public class ExtGroupEval {
 	double precOrVect[]; // precision-oriented similarity
 	double recOrVect[]; // recall-oriented similarity
 	PrintStream writer = null;
-
 	fsize = format.length();
 	try {
 	    // Print result
-	    if ( filename == null ) {
-		writer = System.out;
-	    } else {
-		writer = new PrintStream(new FileOutputStream( filename ));
-	    }
+		this.printIFMehtodA( writer);
 	    Formatter formatter = new Formatter(writer);
 	    // Print the header
 	    writer.println("<html><head></head><body>");
 	    writer.println("<table border='2' frame='sides' rules='groups'>");
 	    writer.println("<colgroup align='center' />");
 	    // for each algo <td spancol='2'>name</td>
-	    for ( String m : listAlgo ) {
-		writer.println("<colgroup align='center' span='"+2*fsize+"' />");
-	    }
+		this.printForMethodB(writer);
 	    // For each file do a
 	    writer.println("<thead valign='top'><tr><th>algo</th>");
 	    // for each algo <td spancol='2'>name</td>
-	    for ( String m : listAlgo ) {
-		writer.println("<th colspan='"+((2*fsize))+"'>"+m+"</th>");
-	    }
+		this.printForMethodC(writer);
 	    writer.println("</tr></thead><tbody><tr><td>test</td>");
 	    // for each algo <td>Prec.</td><td>Rec.</td>
-	    for ( String m : listAlgo ) {
-		for ( int i = 0; i < fsize; i++){
-		    if ( format.charAt(i) == 's' ) {
-			writer.println("<td colspan='2'><center>Symmetric</center></td>");
-		    } else if ( format.charAt(i) == 'e' ) {
-			writer.println("<td colspan='2'><center>Effort</center></td>");
-		    } else if ( format.charAt(i) == 'p' ) {
-			writer.println("<td colspan='2'><center>Prec. orient.</center></td>");
-		    } else if ( format.charAt(i) == 'r' ) {
-			writer.println("<td colspan='2'><center>Rec. orient.</center></td>");
-		    }
-		}
-		//writer.println("<td>Prec.</td><td>Rec.</td>");
-	    }
+		this.printForMethodD(writer);
 	    writer.println("</tr></tbody><tbody>");
 	    foundVect = new int[ listAlgo.size() ];
 	    symVect = new double[ listAlgo.size() ];
 	    effVect = new double[ listAlgo.size() ];
 	    precOrVect = new double[ listAlgo.size() ];
 	    recOrVect = new double[ listAlgo.size() ];
-	    for( int k = listAlgo.size()-1; k >= 0; k-- ) {
-		foundVect[k] = 0;
-		symVect[k] = 0.;
-		effVect[k] = 0.;
-		precOrVect[k] = 0.;
-		recOrVect[k] = 0.;
-	    }
+		this.printForMethodE(foundVect, symVect, effVect, precOrVect, recOrVect);
 	    // </tr>
 	    // For each directory <tr>
 	    boolean colored = false;
-	    for ( Vector test : result ) {
-		int nexpected = -1;
-		if ( colored == true && color != null ){
-		    colored = false;
-		    writer.println("<tr bgcolor=\""+color+"\">");
-		} else {
-		    colored = true;
-		    writer.println("<tr>");
-		};
-		// Print the directory <td>bla</td>
-		writer.println("<td>"+(String)test.get(0)+"</td>");
-		// For each record print the values <td>bla</td>
-		Enumeration f = test.elements();
-		f.nextElement();
-		for( int k = 0 ; f.hasMoreElements() ; k++) {
-		    ExtPREvaluator eval = (ExtPREvaluator)f.nextElement();
-		    if ( eval != null ){
-			// iterative H-means computation
-			if ( nexpected == -1 ){
-			    nexpected = eval.getExpected();
-			    expected += nexpected;
-			}
-			// If foundVect is -1 then results are invalid
-			if ( foundVect[k] != -1 ) foundVect[k] += eval.getFound();
-			for ( int i = 0 ; i < fsize; i++){
-			    writer.print("<td>");
-			    if ( format.charAt(i) == 's' ) {
-				formatter.format("%1.2f", eval.getSymPrecision());
-				System.out.print("</td><td>");
-				formatter.format("%1.2f", eval.getSymRecall());
-				symVect[k] += eval.getSymSimilarity();
-			    } else if ( format.charAt(i) == 'e' ) {
-				formatter.format("%1.2f", eval.getEffPrecision());
-				System.out.print("</td><td>");
-				formatter.format("%1.2f", eval.getEffRecall());
-				effVect[k] += eval.getEffSimilarity();
-			    } else if ( format.charAt(i) == 'p' ) {
-				formatter.format("%1.2f", eval.getPrecisionOrientedPrecision());
-				System.out.print("</td><td>");
-				formatter.format("%1.2f", eval.getPrecisionOrientedRecall());
-				precOrVect[k] += eval.getPrecisionOrientedSimilarity();
-			    } else if ( format.charAt(i) == 'r' ) {
-				formatter.format("%1.2f", eval.getRecallOrientedPrecision());
-				System.out.print("</td><td>");
-				formatter.format("%1.2f", eval.getRecallOrientedRecall());
-				recOrVect[k] += eval.getRecallOrientedSimilarity();
-			    }
-			    writer.println("</td>");
-			}
-		    } else {
-			writer.println("<td>n/a</td><td>n/a</td>");
-		    }
-		}
-		writer.println("</tr>");
-	    }
+	    this.printForMethodF(result, colored,  writer, expected,  foundVect,  formatter,  recOrVect,  precOrVect, symVect, effVect );
 	    writer.print("<tr bgcolor=\"yellow\"><td>H-mean</td>");
 	    int k = 0;
-	    for ( String m : listAlgo ) {
-		if ( foundVect[k] != -1 ){
-		    for ( int i = 0 ; i < fsize; i++){
-			writer.print("<td>");
-			if ( format.charAt(i) == 's' ) {
-			    formatter.format("%1.2f", symVect[k]/foundVect[k]);
-			    System.out.print("</td><td>");
-			    formatter.format("%1.2f", symVect[k]/expected);
-			} else if ( format.charAt(i) == 'e' ) {
-			    formatter.format("%1.2f", effVect[k]/foundVect[k]);
-			    System.out.print("</td><td>");
-			    formatter.format("%1.2f", effVect[k]/expected);
-			} else if ( format.charAt(i) == 'p' ) {
-			    formatter.format("%1.2f", precOrVect[k]/foundVect[k]);
-			    System.out.print("</td><td>");
-			    formatter.format("%1.2f", precOrVect[k]/expected);
-			} else if ( format.charAt(i) == 'r' ) {
-			    formatter.format("%1.2f", recOrVect[k]/foundVect[k]);
-			    System.out.print("</td><td>");
-			    formatter.format("%1.2f", recOrVect[k]/expected);
-			}
-			writer.println("</td>");
-		    }
-		} else {
-		    writer.println("<td colspan='2'><center>Error</center></td>");
-		}
-		//};
-		k++;
-	    }
+		this.printForMethodG(foundVect, k, writer, formatter,symVect,effVect,expected,precOrVect,recOrVect);
 	    writer.println("</tr>");
 	    writer.println("</tbody></table>");
 	    writer.println("<p><small>n/a: result alignment not provided or not readable<br />");
@@ -477,6 +368,351 @@ public class ExtGroupEval {
 	}
     }
 
+	/**
+	 *
+	 * @param writer
+	 * @throws FileNotFoundException
+	 */
+	private void printIFMehtodA(PrintStream writer) throws FileNotFoundException {
+		if ( filename == null ) {
+			writer = System.out;
+		} else {
+			writer = new PrintStream(new FileOutputStream( filename ));
+		}
+	}
+
+	/**
+	 *
+	 * @param writer
+	 */
+	private void printForMethodB(PrintStream writer){
+		for ( String m : listAlgo ) {
+			writer.println("<colgroup align='center' span='"+2*fsize+"' />");
+		}
+	}
+
+	/**
+	 *
+	 * @param writer
+	 */
+	private void printForMethodC(PrintStream writer){
+		for ( String m : listAlgo ) {
+			writer.println("<th colspan='"+((2*fsize))+"'>"+m+"</th>");
+		}
+	}
+
+	/**
+	 *
+	 * @param writer
+	 */
+	private void printForMethodD(PrintStream writer){
+		for ( String m : listAlgo ) {
+			for ( int i = 0; i < fsize; i++){
+				this.printForMethodDInnerA(writer, i);
+			}
+			//writer.println("<td>Prec.</td><td>Rec.</td>");
+		}
+	}
+
+	/**
+	 *
+	 * @param writer
+	 * @param i
+	 */
+	private void printForMethodDInnerA(PrintStream writer, int i){
+		if ( format.charAt(i) == 's' ) {
+			writer.println("<td colspan='2'><center>Symmetric</center></td>");
+		}else{
+			this.printForMethodDInnerB(writer, i);
+		}
+	}
+
+	/**
+	 *
+	 * @param writer
+	 * @param i
+	 */
+	private void printForMethodDInnerB(PrintStream writer, int i){
+		if ( format.charAt(i) == 'e' ) {
+			writer.println("<td colspan='2'><center>Effort</center></td>");
+		}else{
+			this.printForMethodDInnerC(writer, i);
+		}
+	}
+
+	/**
+	 *
+	 * @param writer
+	 * @param i
+	 */
+	private void printForMethodDInnerC(PrintStream writer, int i){
+		if ( format.charAt(i) == 'p' ) {
+			writer.println("<td colspan='2'><center>Prec. orient.</center></td>");
+		}else if ( format.charAt(i) == 'r' ) {
+			writer.println("<td colspan='2'><center>Rec. orient.</center></td>");
+		}
+	}
+
+	/**
+	 *
+	 * @param foundVect
+	 * @param symVect
+	 * @param effVect
+	 * @param precOrVect
+	 * @param recOrVect
+	 */
+	private void printForMethodE(int[] foundVect, double[] symVect, double[] effVect, double[] precOrVect, double[] recOrVect){
+		for( int k = listAlgo.size()-1; k >= 0; k-- ) {
+			foundVect[k] = 0;
+			symVect[k] = 0.;
+			effVect[k] = 0.;
+			precOrVect[k] = 0.;
+			recOrVect[k] = 0.;
+		}
+	}
+
+	/**
+	 *
+	 * @param result
+	 * @param colored
+	 * @param writer
+	 * @param expected
+	 * @param foundVect
+	 * @param formatter
+	 * @param recOrVect
+	 * @param precOrVect
+	 * @param symVect
+	 * @param effVect
+	 */
+	private void printForMethodF(Vector<Vector> result, boolean colored, PrintStream writer, int expected, int[] foundVect, Formatter formatter, double[] recOrVect, double[] precOrVect, double[] symVect, double[] effVect){
+		for ( Vector test : result ) {
+			int nexpected = -1;
+			if ( colored == true && color != null ){
+				colored = false;
+				writer.println("<tr bgcolor=\""+color+"\">");
+			} else {
+				colored = true;
+				writer.println("<tr>");
+			}
+			// Print the directory <td>bla</td>
+			writer.println("<td>"+(String)test.get(0)+"</td>");
+			// For each record print the values <td>bla</td>
+			Enumeration f = test.elements();
+			f.nextElement();
+			this.printForMethodFInner(f, nexpected, expected, writer,  foundVect,  formatter,  recOrVect,  precOrVect, symVect, effVect);
+			writer.println("</tr>");
+		}
+	}
+
+	/**
+	 *
+	 * @param f
+	 * @param nexpected
+	 * @param expected
+	 * @param writer
+	 * @param foundVect
+	 * @param formatter
+	 * @param recOrVect
+	 * @param precOrVect
+	 * @param symVect
+	 * @param effVect
+	 */
+	private void printForMethodFInner(Enumeration f, int nexpected, int expected, PrintStream writer, int[] foundVect, Formatter formatter, double[] recOrVect, double[] precOrVect, double[] symVect, double[] effVect){
+		for( int k = 0 ; f.hasMoreElements() ; k++) {
+			ExtPREvaluator eval = (ExtPREvaluator)f.nextElement();
+			if ( eval != null ){
+				// iterative H-means computation
+				if ( nexpected == -1 ){
+					nexpected = eval.getExpected();
+					expected += nexpected;
+				}
+				// If foundVect is -1 then results are invalid
+				if ( foundVect[k] != -1 ) foundVect[k] += eval.getFound();
+				this.printForMethodFInnerFor(k, eval, writer, foundVect, formatter, recOrVect, precOrVect, symVect, effVect);
+			} else {
+				writer.println("<td>n/a</td><td>n/a</td>");
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param eval
+	 * @param writer
+	 * @param foundVect
+	 * @param formatter
+	 * @param recOrVect
+	 * @param precOrVect
+	 * @param symVect
+	 * @param effVect
+	 */
+	private void printForMethodFInnerFor(int k, ExtPREvaluator eval, PrintStream writer, int[] foundVect, Formatter formatter, double[] recOrVect, double[] precOrVect, double[] symVect, double[] effVect){
+		for ( int i = 0 ; i < fsize; i++){
+			writer.print("<td>");
+			this.printForMethodFInnerForInnerA(formatter, i, eval, symVect, k, effVect, precOrVect, recOrVect);
+			writer.println("</td>");
+		}
+	}
+
+	/**
+	 *
+	 * @param formatter
+	 * @param i
+	 * @param eval
+	 * @param symVect
+	 * @param k
+	 * @param effVect
+	 * @param precOrVect
+	 * @param recOrVect
+	 */
+	private void printForMethodFInnerForInnerA(Formatter formatter, int i, ExtPREvaluator eval, double[] symVect, int k, double[] effVect, double[] precOrVect, double[] recOrVect ){
+		if ( format.charAt(i) == 's' ) {
+			formatter.format("%1.2f", eval.getSymPrecision());
+			System.out.print("</td><td>");
+			formatter.format("%1.2f", eval.getSymRecall());
+			symVect[k] += eval.getSymSimilarity();
+		} else{
+			this.printForMethodFInnerForInnerB(formatter,i, eval, effVect, k, precOrVect, recOrVect);
+		}
+	}
+
+	/**
+	 *
+	 * @param formatter
+	 * @param i
+	 * @param eval
+	 * @param effVect
+	 * @param k
+	 * @param precOrVect
+	 * @param recOrVect
+	 */
+	private void printForMethodFInnerForInnerB(Formatter formatter, int i, ExtPREvaluator eval, double[] effVect, int k, double[] precOrVect, double[] recOrVect ){
+		if ( format.charAt(i) == 'e' ) {
+			formatter.format("%1.2f", eval.getEffPrecision());
+			System.out.print("</td><td>");
+			formatter.format("%1.2f", eval.getEffRecall());
+			effVect[k] += eval.getEffSimilarity();
+		} else{
+			this.printForMethodFInnerForInnerC(formatter,i, eval, precOrVect, recOrVect, k);
+		}
+	}
+
+	/**
+	 *
+	 * @param formatter
+	 * @param i
+	 * @param eval
+	 * @param precOrVect
+	 * @param recOrVect
+	 * @param k
+	 */
+	private void printForMethodFInnerForInnerC(Formatter formatter, int i, ExtPREvaluator eval, double[] precOrVect, double[] recOrVect, int k){
+		if ( format.charAt(i) == 'p' ) {
+			formatter.format("%1.2f", eval.getPrecisionOrientedPrecision());
+			System.out.print("</td><td>");
+			formatter.format("%1.2f", eval.getPrecisionOrientedRecall());
+			precOrVect[k] += eval.getPrecisionOrientedSimilarity();
+		} else if ( format.charAt(i) == 'r' ) {
+			formatter.format("%1.2f", eval.getRecallOrientedPrecision());
+			System.out.print("</td><td>");
+			formatter.format("%1.2f", eval.getRecallOrientedRecall());
+			recOrVect[k] += eval.getRecallOrientedSimilarity();
+		}
+	}
+
+	/**
+	 *
+	 * @param foundVect
+	 * @param k
+	 * @param writer
+	 * @param formatter
+	 * @param symVect
+	 * @param effVect
+	 * @param expected
+	 * @param precOrVect
+	 * @param recOrVect
+	 */
+	private void printForMethodG(int[] foundVect, int k, PrintStream writer, Formatter formatter, double[] symVect, double[] effVect, int expected, double[] precOrVect, double[] recOrVect ){
+		for ( String m : listAlgo ) {
+			if ( foundVect[k] != -1 ){
+				for ( int i = 0 ; i < fsize; i++){
+					writer.print("<td>");
+					this.printForMethodGInnerA(formatter, i, k, expected, foundVect, symVect, effVect, precOrVect, recOrVect);
+					writer.println("</td>");
+				}
+			} else {
+				writer.println("<td colspan='2'><center>Error</center></td>");
+			}
+			//};
+			k++;
+		}
+	}
+
+	/**
+	 *
+	 * @param formatter
+	 * @param i
+	 * @param k
+	 * @param expected
+	 * @param foundVect
+	 * @param symVect
+	 * @param effVect
+	 * @param precOrVect
+	 * @param recOrVect
+	 */
+	private void printForMethodGInnerA(Formatter formatter, int i, int k, int expected, int[] foundVect, double[] symVect, double[] effVect, double[] precOrVect, double[] recOrVect,){
+		if ( format.charAt(i) == 's' ) {
+			formatter.format("%1.2f", symVect[k]/foundVect[k]);
+			System.out.print("</td><td>");
+			formatter.format("%1.2f", symVect[k]/expected);
+		}else{
+			this.printForMethodGInnerB(formatter, i, k, expected, foundVect, effVect, precOrVect, recOrVect);
+		}
+	}
+
+	/**
+	 *
+	 * @param formatter
+	 * @param i
+	 * @param k
+	 * @param expected
+	 * @param foundVect
+	 * @param effVect
+	 * @param precOrVect
+	 * @param recOrVect
+	 */
+	private void printForMethodGInnerB(Formatter formatter, int i, int k, int expected, int[] foundVect, double[] effVect, double[] precOrVect, double[] recOrVect){
+		if ( format.charAt(i) == 'e' ) {
+			formatter.format("%1.2f", effVect[k]/foundVect[k]);
+			System.out.print("</td><td>");
+			formatter.format("%1.2f", effVect[k]/expected);
+		} else{
+			this.printForMethodGInnerC(formatter, i, k, precOrVect, recOrVect, expected, foundVect );
+		}
+	}
+
+	/**
+	 *
+	 * @param formatter
+	 * @param i
+	 * @param k
+	 * @param precOrVect
+	 * @param recOrVect
+	 * @param expected
+	 * @param foundVect
+	 */
+	private void printForMethodGInnerC(Formatter formatter, int i, int k, double[] precOrVect, double[] recOrVect, int expected, int[] foundVect){
+		if ( format.charAt(i) == 'p' ) {
+			formatter.format("%1.2f", precOrVect[k]/foundVect[k]);
+			System.out.print("</td><td>");
+			formatter.format("%1.2f", precOrVect[k]/expected);
+		} else if ( format.charAt(i) == 'r' ) {
+			formatter.format("%1.2f", recOrVect[k]/foundVect[k]);
+			System.out.print("</td><td>");
+			formatter.format("%1.2f", recOrVect[k]/expected);
+		}
+	}
+	
     public void usage() {
 	System.out.println("usage: ExtGroupEval [options]");
 	System.out.println("options are:");
