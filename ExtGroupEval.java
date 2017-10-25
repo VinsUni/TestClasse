@@ -165,15 +165,15 @@ public class ExtGroupEval {
 		/* Type of output (tex/html/xml/ascii) */
 				type = g.getOptarg();
 				break;
-			case 's' :
+		//	case 's' :
 		/* Print per type or per algo */
-				dominant = g.getOptarg();
-				break;
-			case 'c' :
+		//		dominant = g.getOptarg();
+		//		break;
+		//	case 'c' :
 		/* Print colored lines */
-				color = "lightblue";
+			//	color = "lightblue";
 				//dominant = g.getOptarg();
-				break;
+		//		break;
 			case 'd' :
 		/* Debug level  */
 				arg = g.getOptarg();
