@@ -660,7 +660,7 @@ public class ExtGroupEval {
 	 * @param precOrVect
 	 * @param recOrVect
 	 */
-	private void printForMethodGInnerA(Formatter formatter, int i, int k, int expected, int[] foundVect, double[] symVect, double[] effVect, double[] precOrVect, double[] recOrVect,){
+	private void printForMethodGInnerA(Formatter formatter, int i, int k, int expected, int[] foundVect, double[] symVect, double[] effVect, double[] precOrVect, double[] recOrVect){
 		if ( format.charAt(i) == 's' ) {
 			formatter.format("%1.2f", symVect[k]/foundVect[k]);
 			System.out.print("</td><td>");
@@ -712,7 +712,7 @@ public class ExtGroupEval {
 			formatter.format("%1.2f", recOrVect[k]/expected);
 		}
 	}
-	
+
     public void usage() {
 	System.out.println("usage: ExtGroupEval [options]");
 	System.out.println("options are:");
