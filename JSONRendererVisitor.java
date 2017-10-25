@@ -271,58 +271,92 @@ public class JSONRendererVisitor extends IndentedRendererVisitor implements Alig
 	     || alignment.getLevel().startsWith("2EDOAL") ){ //expensive test
 	    indentedOutputln("{ \"@type\" : \""+SyntaxElement.CELL.print(DEF)+"\",");
 	    increaseIndent();
-	    if ( cell.getId() != null && !cell.getId().equals("") ){
-		//indentedOutputln("\"rdf:about\" : \""+cell.getId()+"\",");
-		indentedOutputln("\"@id\" : \""+cell.getId()+"\",");
-	    }
-	    if ( alignment.getLevel().startsWith("2EDOAL") ) {
-		indentedOutputln("\""+SyntaxElement.ENTITY1.print(DEF)+"\" : ");
-		increaseIndent();
-		((Expression)(cell.getObject1())).accept( this );
-		decreaseIndent();
-		writer.print(","+NL);
-		indentedOutputln("\""+SyntaxElement.ENTITY2.print(DEF)+"\" : ");
-		increaseIndent();
-		((Expression)(cell.getObject2())).accept( this );
-		decreaseIndent();
-		writer.print(","+NL);
-		if ( cell instanceof EDOALCell ) { // Here put the transf
-		    Set<Transformation> transfs = ((EDOALCell)cell).transformations();
-		    if ( transfs != null ) {
-			for ( Transformation transf : transfs ){
-			    indentedOutputln("\""+SyntaxElement.TRANSFORMATION.print(DEF)+"\" : ");
-			    increaseIndent();
-			    transf.accept( this );
-			    decreaseIndent();
-			    writer.print(","+NL);
-			}
-		    }
-		}
-	    } else {
-		indentedOutputln("\""+SyntaxElement.ENTITY1.print(DEF)+"\" : \""+u1.toString()+"\",");
-		indentedOutputln("\""+SyntaxElement.ENTITY2.print(DEF)+"\" : \""+u2.toString()+"\",");
-	    }
+	    this.visitMethodA();
+	    this.visitMethodB(u1,u2);
 	    indentedOutput("\""+SyntaxElement.RULE_RELATION.print(DEF)+"\" : \"");
 	    cell.getRelation().accept( this );
 	    writer.print("\","+NL);
 	    indentedOutput("\""+SyntaxElement.MEASURE.print(DEF)+"\" : \""+cell.getStrength()+"\"");
-	    if ( cell.getSemantics() != null &&
-		 !cell.getSemantics().equals("") &&
-		 !cell.getSemantics().equals("first-order") ) {
-		writer.print(","+NL);
-		indentedOutput("\""+SyntaxElement.SEMANTICS.print(DEF)+"\" : \""+cell.getSemantics()+"\"");
-	    }
-	    if ( cell.getExtensions() != null ) {
-		for ( String[] ext : cell.getExtensions() ){
-		    writer.print(","+NL);
-		    indentedOutputln(ext[1]+" : \""+ext[2]+"\"");
-		}
-	    }
+	    this.visitMethodC();
 	    decreaseIndent();
 	    writer.print(NL);
 	    indentedOutput("}");
 	}
     }
+
+	/**
+	 *
+	 */
+	private void visitMethodA(){
+		if ( cell.getId() != null && !cell.getId().equals("") ){
+			//indentedOutputln("\"rdf:about\" : \""+cell.getId()+"\",");
+			indentedOutputln("\"@id\" : \""+cell.getId()+"\",");
+		}
+	}
+
+	/**
+	 *
+	 * @param u1
+	 * @param u2
+	 * @throws AlignmentException
+	 */
+	private void visitMethodB(URI u1, URI u2) throws AlignmentException {
+		if ( alignment.getLevel().startsWith("2EDOAL") ) {
+			indentedOutputln("\""+SyntaxElement.ENTITY1.print(DEF)+"\" : ");
+			increaseIndent();
+			((Expression)(cell.getObject1())).accept( this );
+			decreaseIndent();
+			writer.print(","+NL);
+			indentedOutputln("\""+SyntaxElement.ENTITY2.print(DEF)+"\" : ");
+			increaseIndent();
+			((Expression)(cell.getObject2())).accept( this );
+			decreaseIndent();
+			writer.print(","+NL);
+			this.visitMethodBInner();
+		} else {
+			indentedOutputln("\""+SyntaxElement.ENTITY1.print(DEF)+"\" : \""+u1.toString()+"\",");
+			indentedOutputln("\""+SyntaxElement.ENTITY2.print(DEF)+"\" : \""+u2.toString()+"\",");
+		}
+	}
+
+	/**
+	 * 
+	 * @throws AlignmentException
+	 */
+	private void visitMethodBInner() throws AlignmentException {
+		if ( cell instanceof EDOALCell ) { // Here put the transf
+			Set<Transformation> transfs = ((EDOALCell)cell).transformations();
+			if ( transfs != null ) {
+				for ( Transformation transf : transfs ){
+					indentedOutputln("\""+SyntaxElement.TRANSFORMATION.print(DEF)+"\" : ");
+					increaseIndent();
+					transf.accept( this );
+					decreaseIndent();
+					writer.print(","+NL);
+				}
+			}
+		}
+	}
+
+	/**
+	 *
+	 */
+	private void visitMethodC(){
+		if ( cell.getSemantics() != null &&
+				!cell.getSemantics().equals("") &&
+				!cell.getSemantics().equals("first-order") ) {
+			writer.print(","+NL);
+			indentedOutput("\""+SyntaxElement.SEMANTICS.print(DEF)+"\" : \""+cell.getSemantics()+"\"");
+		}
+		if ( cell.getExtensions() != null ) {
+			for ( String[] ext : cell.getExtensions() ){
+				writer.print(","+NL);
+				indentedOutputln(ext[1]+" : \""+ext[2]+"\"");
+			}
+		}
+	}
+
+
 
     // DONE: could also be a qualified class name
     public void visit( Relation rel ) throws AlignmentException {
